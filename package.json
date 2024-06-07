@@ -1,0 +1,36 @@
+{
+  "name": "typescript-moeralib",
+  "version": "0.1.0",
+  "description": "Modern Telegram Bot Framework",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/MoeraOrg/typescript-moeralib.git"
+  },
+  "bugs": {
+    "url": "https://github.com/MoeraOrg/moera-issues/issues"
+  },
+  "author": "Shmuel Leib Melamud <balu@moera.org>",
+  "homepage": "https://moera.org",
+  "license": "Apache-2.0",
+  "scripts": {
+    "build": "tsc"
+  },
+  "type": "module",
+  "engines": {
+    "node": ">=18.10.0"
+  },
+  "types": "./typings/index.d.ts",
+  "dependencies": {
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.2",
+    "typescript": "^5.4.5"
+  },
+  "keywords": [
+    "moera",
+    "social",
+    "network",
+    "api",
+    "decentralized"
+  ]
+}
