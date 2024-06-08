@@ -21,6 +21,9 @@
   },
   "types": "./typings/index.d.ts",
   "dependencies": {
+    "ajv": "^8.16.0",
+    "ajv-formats": "^3.0.1",
+    "change-case": "^5.4.4"
   },
   "devDependencies": {
     "@types/node": "^20.14.2",
