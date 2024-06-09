@@ -373,6 +373,13 @@ def comma_wrap(s: str, indent: int) -> str:
     return result
 
 
+def params_wrap(template: str, substitute: str, indent: int) -> str:
+    line = template % substitute
+    if len(line) > 120:
+        line = template % ('\n' + ind(indent) + comma_wrap(substitute, indent) + '\n' + ind(indent - 1))
+    return line
+
+
 class AuthType(Enum):
     NONE = 0
     OPTIONAL = 1
@@ -388,14 +395,14 @@ def auth_type(auth: str) -> AuthType:
     return AuthType.REQUIRED
 
 
-def generate_sagas(api: Any, structs: dict[str, Structure], afile: TextIO) -> None:
+def generate_calls(api: Any, structs: dict[str, Structure], afile: TextIO) -> None:
     for obj in api['objects']:
         for request in obj.get('requests', []):
             if 'function' not in request:
                 continue
 
-            params = '    caller: WithContext<ClientAction> | null, nodeName: RelNodeName | string'
-            tail_params = ''
+            params: list[str] = []
+            tail_params: list[str] = []
             url_params: dict[str, str] = {}
             flag_name: str | None = None
             flag_js_name: str | None = None
@@ -417,12 +424,12 @@ def generate_sagas(api: Any, structs: dict[str, Structure], afile: TextIO) -> No
                     flag_js_name = js_name
                     flags = [flag['name'] for flag in param['flags']]
                     for flag in flags:
-                        params += ', with{name}: boolean = false'.format(name=flag.capitalize())
+                        params.append('with{name}: boolean = false'.format(name=flag.capitalize()))
                 else:
                     if param.get('optional', False):
-                        tail_params += f', {js_name}: {js_type} | null = null'
+                        tail_params.append(f'{js_name}: {js_type} | null = null')
                     else:
-                        params += f', {js_name}: {js_type}'
+                        params.append(f'{js_name}: {js_type}')
             body = ''
             if 'in' in request:
                 if 'type' in request['in']:
@@ -430,8 +437,8 @@ def generate_sagas(api: Any, structs: dict[str, Structure], afile: TextIO) -> No
                         print('Unrecognised type "{type}" of the input body of the request "{method} {url}"'
                               .format(type=request['in']['type'], method=request['type'], url=request['url']))
                         exit(1)
-                    body = ', body: file, onProgress'
-                    params += ', file: File, onProgress?: ProgressHandler'
+                    body = ', body'
+                    params.append('body: Buffer')
                 else:
                     if 'name' not in request['in']:
                         print('Missing name of body of the request "{method} {url}"'
@@ -442,18 +449,8 @@ def generate_sagas(api: Any, structs: dict[str, Structure], afile: TextIO) -> No
                     if request['in'].get('array', False):
                         js_type += '[]'
                     body = f', body: {name}'
-                    params += f', {name}: {js_type}'
+                    params.append(f'{name}: {js_type}')
             params += tail_params
-            params += ', errorFilter: ErrorFilter = false'
-            auth_t = auth_type(request.get('auth', 'none'))
-            if auth_t != AuthType.NONE:
-                auth = ', auth'
-                if auth_t == AuthType.OPTIONAL:
-                    params += ', auth: boolean | string = true'
-                else:
-                    params += ', auth: true | string = true'
-            else:
-                auth = ''
 
             method = request['type']
             location: str = request['url']
@@ -475,13 +472,6 @@ def generate_sagas(api: Any, structs: dict[str, Structure], afile: TextIO) -> No
                     subs.append(name)
                 else:
                     subs.append(f'{name}: {js_name}')
-            if len(subs) > 0:
-                location = 'urlWithParameters({location}, {{{subs}}})'.format(location=location, subs=', '.join(subs))
-                if len(location) > 81:
-                    location = (location
-                                .replace('(', '(\n        ')
-                                .replace(', {', ',\n        {')
-                                .replace(')', '\n    )'))
 
             result = 'API.Result'
             result_schema = 'Result'
@@ -504,21 +494,24 @@ def generate_sagas(api: Any, structs: dict[str, Structure], afile: TextIO) -> No
                         result += '[]'
                         result_schema += 'Array'
 
-            afile.write('\nexport function* {name}(\n{params}\n): CallApiResult<{result}> {{\n\n'
-                        .format(name=request['function'], params=comma_wrap(params, 1), result=result))
+            name = request['function']
+            afile.write(params_wrap(f'\n{ind(1)}async {name}(%s): Promise<{result}> {{\n', ', '.join(params), 2))
             if flag_name is not None:
                 items = ', '.join('"%s": with%s' % (flag, flag.capitalize()) for flag in flags)
-                afile.write(f'    const {flag_js_name} = commaSeparatedFlags({{{items}}});\n')
-            afile.write(f'    const location = {location};\n')
-            afile.write(f'    return yield* callApi<{result}>({{\n')
+                afile.write(f'{ind(2)}const {flag_js_name} = commaSeparatedFlags({{{items}}});\n')
+            afile.write(f'{ind(2)}const location = {location};\n')
+            query_params = ''
+            if len(subs) > 0:
+                afile.write(f'{ind(2)}const params = {{{", ".join(subs)}}};\n')
+                query_params = ', params'
+            afile.write(f'{ind(2)}return await this.call("{name}", location, {{\n')
             decode_bodies = ''
             if result_body:
-                decode_bodies = ', decodeBodies: true'
-            call_params = (f'        caller, nodeName, method: "{method}", location{body}{auth}'
-                           f', schema: "{result_schema}"{decode_bodies}, errorFilter\n')
+                decode_bodies = ', bodies: true'
+            call_params = f'{ind(3)}method: "{method}"{query_params}{body}, schema: "{result_schema}"{decode_bodies}\n'
             afile.write(comma_wrap(call_params, 2))
-            afile.write('    });\n')
-            afile.write('}\n')
+            afile.write(f'{ind(2)}}}) as {result};\n')
+            afile.write(f'{ind(1)}}}\n')
 
 
 PREAMBLE_TYPES = '''// This file is generated
@@ -534,16 +527,20 @@ export const NODE_API_SCHEMAS = {
     definitions: {
 '''
 
-PREAMBLE_SAGAS = '''// This file is generated
+PREAMBLE_CALLS = '''// This file is generated
 
-import { callApi, CallApiResult, ErrorFilter } from "api/node/call";
-import * as API from "api/node/api-types";
-import { ProgressHandler } from 'api/fetcher';
-import { ClientAction } from "state/action";
-import { WithContext } from "state/action-types";
-import { RelNodeName } from "util/rel-node-name";
-import { urlWithParameters, ut } from "util/url";
-import { commaSeparatedFlags } from "util/misc";
+import { Caller } from "./caller";
+import * as API from "./api-types";
+import { commaSeparatedFlags, ut } from "../util";
+
+export class MoeraNode extends Caller {
+
+    constructor(nodeUrl: string | null = null) {
+        super();
+        if (nodeUrl != null) {
+            this.nodeUrl(nodeUrl);
+        }
+    }
 '''
 
 
@@ -562,161 +559,20 @@ def generate_types(api: Any, outdir: str) -> None:
             sfile.write('\n    }\n')
             sfile.write('}\n')
 
-    with open(outdir + '/node/api-sagas.ts', 'w+') as afile:
-        afile.write(PREAMBLE_SAGAS)
-        generate_sagas(api, structs, afile)
-
-
-class Event(Interface):
-    def get_name(self) -> str:
-        return to_pascal(self.data['type']) + 'Event'
-
-    def get_schema_fields(self) -> list[Any]:
-        fields = super().get_schema_fields()
-        fields.insert(0, {
-            'type': 'String',
-            'name': 'type'
-        })
-        return fields
-
-    def generate_type(self, tfile: TextIO) -> None:
-        type = self.data['type']
-        name = self.get_name()
-        if 'fields' not in self.data:
-            tfile.write(f'\nexport type {name} = BaseEvent<"{type}">;\n')
-        else:
-            tfile.write(f'\nexport interface {name} extends BaseEvent<"{type}"> {{\n')
-            for field in self.data['fields']:
-                if field.get('optional', False):
-                    tmpl = '    %s?: %s | null;\n'
-                else:
-                    tmpl = '    %s: %s;\n'
-                if 'struct' in field:
-                    t = field['struct']
-                elif 'enum' in field:
-                    t = field['enum']
-                else:
-                    t = to_js_type(field['type'])
-                if field.get('array', False):
-                    t += '[]'
-                tfile.write(tmpl % (field['name'], t))
-            tfile.write('}\n')
-
-    def generate(self, tfile: TextIO, sfile: TextIO) -> None:
-        self.generate_type(tfile)
-        self.generate_schema(sfile)
-
-
-def scan_events(api: Any) -> dict[str, Event]:
-    events: dict[str, Event] = {event['type']: Event(event) for event in api['events']}
-    return events
-
-
-PREAMBLE_EVENT_TYPES = '''// This file is generated
-
-'''
-
-DECLARATIONS_EVENT_TYPES = '''
-export interface EventPacket {
-    queueStartedAt: number;
-    ordinal: number;
-    sentAt?: number | null;
-    cid?: string | null;
-    event: {
-        type: string;
-    }
-}
-
-export interface BaseEvent<T> {
-    type: T;
-}
-'''
-
-PREAMBLE_EVENT_SCHEMAS = '''// This file is generated for schema compiler only, do not use directly
-
-export const EVENT_SCHEMAS = {
-    $id: "event",
-    definitions: {
-        EventPacket: {
-            type: "object",
-            properties: {
-                "queueStartedAt": {
-                    type: "integer"
-                },
-                "ordinal": {
-                    type: "integer"
-                },
-                "sentAt": {
-                    type: "integer",
-                    nullable: true
-                },
-                "cid": {
-                    type: "string",
-                    nullable: true
-                },
-                "event": {
-                    type: "object",
-                    properties: {
-                        "type": {
-                            type: "string"
-                        }
-                    },
-                    required: ["type"]
-                }
-            },
-            additionalProperties: false,
-            required: ["queueStartedAt", "ordinal", "event"]
-        },
-'''
-
-
-def generate_event_types_imports(api: Any, tfile: TextIO) -> None:
-    structs = set()
-    for event in api['events']:
-        if 'fields' not in event:
-            continue
-        for field in event['fields']:
-            if 'struct' in field:
-                structs.add(field['struct'])
-            if 'enum' in field:
-                structs.add(field['enum'])
-    imports = sorted(list(structs))
-    tfile.write('import {\n')
-    for name in imports:
-        tfile.write(f'{ind(1)}{name},\n')
-    tfile.write('} from "api/node/api-types";\n')
-
-
-def generate_event_types(events: dict[str, Event], tfile: TextIO, sfile: TextIO) -> None:
-    for event in events.values():
-        event.generate(tfile, sfile)
-
-
-def generate_events(api: Any, outdir: str) -> None:
-    events = scan_events(api)
-
-    with open(outdir + '/events/api-types.ts', 'w+') as tfile:
-        with open(outdir + '/events/api-schemas.mjs', 'w+') as sfile:
-            tfile.write(PREAMBLE_EVENT_TYPES)
-            generate_event_types_imports(api, tfile)
-            tfile.write(DECLARATIONS_EVENT_TYPES)
-            sfile.write(PREAMBLE_EVENT_SCHEMAS)
-            generate_event_types(events, tfile, sfile)
-            sfile.write('\n    }\n')
-            sfile.write('}\n')
+    with open(outdir + '/node/calls.ts', 'w+') as afile:
+        afile.write(PREAMBLE_CALLS)
+        generate_calls(api, structs, afile)
+        afile.write('\n}\n')
 
 
 def generate_code(outdir: str) -> None:
     node_api = read_api(sys.argv[1])
     generate_types(node_api, outdir)
 
-    events_api = read_api(sys.argv[2])
-    generate_events(events_api, outdir)
 
-
-if len(sys.argv) < 3 or sys.argv[1] == '':
-    print("Usage: js-moera-api <node_api.yml file path> <events.yml file path> <output directory>")
+if len(sys.argv) < 2 or sys.argv[1] == '':
+    print("Usage: nodejs-moera-api <node_api.yml file path> <output directory>")
     exit(1)
 
-outdir = sys.argv[3] if len(sys.argv) >= 4 else '.'
+outdir = sys.argv[2] if len(sys.argv) >= 3 else '.'
 generate_code(outdir)
