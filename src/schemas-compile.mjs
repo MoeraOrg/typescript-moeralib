@@ -5,7 +5,7 @@ import Ajv from 'ajv';
 import standaloneCode from 'ajv/dist/standalone/index.js';
 
 import { NAMING_API_SCHEMAS } from "./naming/api-schemas.mjs";
-import { NODE_API_SCHEMAS } from "./node/api-schemas.mjs";
+import { NODE_API_SCHEMAS } from "./node/schemas.mjs";
 
 const apiDir = path.dirname(fileURLToPath(import.meta.url));
 
@@ -52,7 +52,7 @@ function compileNodeApiSchemas() {
     moduleCode += '\nexport const NODE_API_VALIDATORS = {\n';
     Object.keys(NODE_API_SCHEMAS.definitions).forEach(k => moduleCode += `    "${k}": ${k},\n`);
     moduleCode += '};\n';
-    writeFileSync(path.resolve(apiDir, "node/api-validators.js"), moduleCode);
+    writeFileSync(path.resolve(apiDir, "node/validators.js"), moduleCode);
 }
 
 compileNamingApiSchemas();

@@ -1,7 +1,7 @@
 // This file is generated
 
 import { Caller } from "./caller";
-import * as API from "./api-types";
+import * as API from "./types";
 import { commaSeparatedFlags, ut } from "../util";
 
 export class MoeraNode extends Caller {

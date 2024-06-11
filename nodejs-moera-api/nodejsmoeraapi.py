@@ -530,7 +530,7 @@ export const NODE_API_SCHEMAS = {
 PREAMBLE_CALLS = '''// This file is generated
 
 import { Caller } from "./caller";
-import * as API from "./api-types";
+import * as API from "./types";
 import { commaSeparatedFlags, ut } from "../util";
 
 export class MoeraNode extends Caller {
@@ -547,8 +547,8 @@ export class MoeraNode extends Caller {
 def generate_types(api: Any, outdir: str) -> None:
     structs = scan_structures(api)
 
-    with open(outdir + '/node/api-types.ts', 'w+') as tfile:
-        with open(outdir + '/node/api-schemas.mjs', 'w+') as sfile:
+    with open(outdir + '/node/types.ts', 'w+') as tfile:
+        with open(outdir + '/node/schemas.mjs', 'w+') as sfile:
             tfile.write(PREAMBLE_TYPES)
             sfile.write(PREAMBLE_SCHEMAS)
             for enum in api['enums']:

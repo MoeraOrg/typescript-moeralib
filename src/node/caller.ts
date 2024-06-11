@@ -1,6 +1,6 @@
 import cloneDeep from 'lodash.clonedeep';
 
-import { Body, BodyFormat, Result, SourceFormat } from "./api-types";
+import { Body, BodyFormat, Result, SourceFormat } from "./types";
 import { validateSchema } from "./validate";
 import { urlWithParameters } from "../util";
 

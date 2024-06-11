@@ -1,4 +1,4 @@
-import { NODE_API_VALIDATORS } from "./api-validators";
+import { NODE_API_VALIDATORS } from "./validators";
 import { BasicValidateFunction, isSchemaValid } from "../schema";
 
 interface ValidationResult {
