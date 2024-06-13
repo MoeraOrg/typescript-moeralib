@@ -22,18 +22,10 @@ function compileNamingApiSchemas() {
     );
     let moduleCode = '// This file is generated\n\n';
     moduleCode += standaloneCode(ajv, idMapping);
+    moduleCode += '\nexport const NAMING_API_VALIDATORS = {\n';
+    Object.keys(NAMING_API_SCHEMAS.definitions).forEach(k => moduleCode += `    "${k}": ${k},\n`);
+    moduleCode += '};\n';
     writeFileSync(path.resolve(apiDir, "naming/api-validators.js"), moduleCode);
-
-    let tsCode = `// This file is generated
-
-import { BasicValidateFunction } from "api/schema";
-import * as NamingApiType from "api/naming/api-types";
-
-`
-    Object.keys(NAMING_API_SCHEMAS.definitions)
-        .map(k => `declare const ${k}: BasicValidateFunction<NamingApiType.${k}>;\n`)
-        .forEach(line => tsCode += line);
-    writeFileSync(path.resolve(apiDir, "naming/api-validators.d.ts"), tsCode);
 }
 
 function compileNodeApiSchemas() {

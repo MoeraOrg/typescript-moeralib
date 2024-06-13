@@ -3,6 +3,7 @@ import cloneDeep from 'lodash.clonedeep';
 import { Body, BodyFormat, Result, SourceFormat } from "./types";
 import { validateSchema } from "./validate";
 import { urlWithParameters } from "../util";
+import { formatSchemaErrors } from "../schema";
 
 export class MoeraNodeError extends Error {
 
@@ -66,10 +67,6 @@ function encodeBodies(data: Structure | Structure[]): Structure | Structure[] {
         encoded.bodySrc = encodeBody(data.bodySrc, data.bodySrcFormat);
     }
     return encoded;
-}
-
-function formatSchemaErrors(errors: { message?: string }[] | null | undefined): string {
-    return errors != null ? errors.map(({message}) => message).join(", ") : "";
 }
 
 function decodeBody(name: string, encoded: string, format: BodyFormat | SourceFormat | null): Body {

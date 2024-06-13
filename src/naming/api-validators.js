@@ -784,3 +784,10 @@ return false;
 validate14.errors = vErrors;
 return errors === 0;
 }
+
+export const NAMING_API_VALIDATORS = {
+    "ObjectResult": ObjectResult,
+    "BooleanResult": BooleanResult,
+    "ErrorResult": ErrorResult,
+    "RegisteredNameInfo": RegisteredNameInfo,
+};

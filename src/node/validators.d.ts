@@ -1,3 +1,3 @@
-import { BasicValidateFunction } from "api/schema";
+import { ValidatorsMap } from "../schema";
 
-declare const NODE_API_VALIDATORS: Partial<Record<string, BasicValidateFunction<any>>>;
+declare const NODE_API_VALIDATORS: ValidatorsMap;

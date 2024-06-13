@@ -1,20 +1,12 @@
-interface Result<T> {
-    jsonrpc: string;
-    result?: T | null;
-    id: number;
+import { JSONRPCErrorResponse, JSONRPCSuccessResponse } from "json-rpc-2.0";
+
+interface Result<T> extends JSONRPCSuccessResponse {
+    result: T | null;
 }
 
 export type ObjectResult = Result<object>;
 export type BooleanResult = Result<boolean>;
-
-export interface ErrorResult {
-    jsonrpc: string;
-    error: {
-        code: number;
-        message: string;
-    };
-    id: number;
-}
+export type ErrorResult = JSONRPCErrorResponse;
 
 export interface RegisteredNameInfo {
     name: string;
