@@ -124,7 +124,7 @@ function decodeBodies(name: string, data: Structure | Structure[]): Structure | 
 export type NodeAuth = "none" | "peer" | "admin" | "root-admin";
 
 export interface CarteSource {
-    getCarte: () => string;
+    getCarte: () => Promise<string>;
 }
 
 export function moeraRoot(url: string): string {
@@ -234,7 +234,7 @@ export class Caller {
             switch (this._authMethod) {
                 case "peer":
                     if (this._carteSource != null) {
-                        bearer = "carte:" + this._carteSource.getCarte();
+                        bearer = "carte:" + (await this._carteSource.getCarte());
                     } else if (this._carte != null) {
                         bearer = "carte:" + this._carte;
                     } else {

@@ -559,7 +559,7 @@ def generate_types(api: Any, outdir: str) -> None:
             sfile.write('\n    }\n')
             sfile.write('}\n')
 
-    with open(outdir + '/node/calls.ts', 'w+') as afile:
+    with open(outdir + '/node/node.ts', 'w+') as afile:
         afile.write(PREAMBLE_CALLS)
         generate_calls(api, structs, afile)
         afile.write('\n}\n')

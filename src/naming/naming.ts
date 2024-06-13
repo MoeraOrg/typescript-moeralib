@@ -219,7 +219,7 @@ export function shorten(nodeName: string | null): string | null {
     }
 }
 
-function expand(nodeName: string | null): string | null {
+export function expand(nodeName: string | null): string | null {
     if (nodeName === null) {
         return null;
     }
