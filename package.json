@@ -49,6 +49,10 @@
     "./node/types": {
       "types": "./typings/node/types/index.d.ts",
       "default": "./lib/node/types/index.js"
+    },
+    "./universal-location": {
+      "types": "./typings/universal-location.d.ts",
+      "default": "./lib/universal-location.js"
     }
   },
   "keywords": [
