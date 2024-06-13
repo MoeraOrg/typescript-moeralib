@@ -263,7 +263,7 @@ export class Caller {
             throw new MoeraCallError("Node URL is not set");
         }
 
-        let url = urlWithParameters(this.root + "api/" + location, params);
+        let url = urlWithParameters(this.root + "/api" + location, params);
         let response;
         try {
              response = await fetch(url, {method, headers, body: bodyEncoded});
@@ -291,7 +291,7 @@ export class Caller {
             if (!valid) {
                 throw new MoeraNodeError(name, "Server returned error status");
             }
-            throw new MoeraNodeApiError(data.errorCode, data.message);
+            throw new MoeraNodeApiError(name, data);
         }
 
         if (schema !== "blob") {

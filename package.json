@@ -36,11 +36,11 @@
   "exports": {
     "./naming": {
       "types": "./typings/naming/index.d.ts",
-      "default": "./lib/namimg/index.js"
+      "default": "./lib/naming/index.js"
     },
     "./naming/types": {
       "types": "./typings/naming/types/index.d.ts",
-      "default": "./lib/namimg/types/index.js"
+      "default": "./lib/naming/types/index.js"
     },
     "./node": {
       "types": "./typings/node/index.d.ts",
