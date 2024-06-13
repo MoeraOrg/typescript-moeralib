@@ -2,7 +2,7 @@ import { JSONRPCClient } from 'json-rpc-2.0';
 
 import { formatSchemaErrors } from "../schema";
 import { validateSchema } from "./validate";
-import { ErrorResult, RegisteredNameInfo } from "./api-types";
+import { ErrorResult, OperationStatusInfo, RegisteredNameInfo, SigningKeyInfo } from "./types";
 
 export const MAIN_NAMING_SERVER = "https://naming.moera.org/moera-naming";
 export const DEV_NAMING_SERVER = "https://naming-dev.moera.org/moera-naming";
@@ -93,6 +93,21 @@ export class MoeraNaming {
                     );
                 }
                 this.rpcClient.receive(data);
+                return;
+            }
+
+            if (schema == "string") {
+                const {valid, errors} = validateSchema("StringResult", data);
+                if (!valid) {
+                    return Promise.reject(
+                        new MoeraNamingError(
+                            method,
+                            "Server returned invalid string response: " + formatSchemaErrors(errors)
+                        )
+                    );
+                }
+                this.rpcClient.receive(data);
+                return;
             }
 
             {
@@ -108,6 +123,12 @@ export class MoeraNaming {
             }
 
             const result = data.result;
+
+            if (result == null) {
+                this.rpcClient.receive(data);
+                return;
+            }
+
             const {valid, errors} = validateSchema(schema, result);
             if (!valid) {
                 return Promise.reject(
@@ -122,8 +143,48 @@ export class MoeraNaming {
         });
     }
 
+    async put(
+        name: string, generation: number, updatingKey: string | null = null, nodeUri: string | null = null,
+        signingKey: string | null = null, validFrom: number | null = null, previousDigest: string | null = null,
+        signature: string | null = null
+    ): Promise<string> {
+        return await this.rpcClient.request(
+            "put",
+            {name, generation, updatingKey, nodeUri, signingKey, validFrom, previousDigest, signature},
+            ["put", "string"]
+        );
+    }
+
+    async getStatus(operationId: string): Promise<OperationStatusInfo | null> {
+        return await this.rpcClient.request("getStatus", {operationId}, ["getStatus", "OperationStatusInfo"]);
+    }
+
     async getCurrent(name: string, generation: number): Promise<RegisteredNameInfo> {
         return await this.rpcClient.request("getCurrent", {name, generation}, ["getCurrent", "RegisteredNameInfo"]);
+    }
+
+    async getPast(name: string, generation: number, at: number): Promise<RegisteredNameInfo | null> {
+        return await this.rpcClient.request("getPast", {name, generation, at}, ["getPast", "RegisteredNameInfo"]);
+    }
+
+    async isFree(name: string, generation: number): Promise<boolean> {
+        return await this.rpcClient.request("isFree", {name, generation}, ["isFree", "boolean"]);
+    }
+
+    async getSimilar(name: string): Promise<RegisteredNameInfo | null> {
+        return await this.rpcClient.request("getSimilar", {name}, ["getSimilar", "RegisteredNameInfo"]);
+    }
+
+    async getAllKeys(name: string, generation: number): Promise<SigningKeyInfo[]> {
+        return await this.rpcClient.request("getAllKeys", {name, generation}, ["getAllKeys", "SigningKeyInfoArray"]);
+    }
+
+    async getAll(at: number, page: number, size: number): Promise<RegisteredNameInfo[]> {
+        return await this.rpcClient.request("getAll", {at, page, size}, ["getAll", "RegisteredNameInfoArray"]);
+    }
+
+    async getAllNewer(at: number, page: number, size: number): Promise<RegisteredNameInfo[]> {
+        return await this.rpcClient.request("getAllNewer", {at, page, size}, ["getAllNewer", "RegisteredNameInfoArray"]);
     }
 
 }

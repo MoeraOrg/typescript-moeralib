@@ -4,7 +4,7 @@ import { fileURLToPath } from 'url';
 import Ajv from 'ajv';
 import standaloneCode from 'ajv/dist/standalone/index.js';
 
-import { NAMING_API_SCHEMAS } from "./naming/api-schemas.mjs";
+import { NAMING_API_SCHEMAS } from "./naming/schemas.mjs";
 import { NODE_API_SCHEMAS } from "./node/schemas.mjs";
 
 const apiDir = path.dirname(fileURLToPath(import.meta.url));
@@ -25,7 +25,7 @@ function compileNamingApiSchemas() {
     moduleCode += '\nexport const NAMING_API_VALIDATORS = {\n';
     Object.keys(NAMING_API_SCHEMAS.definitions).forEach(k => moduleCode += `    "${k}": ${k},\n`);
     moduleCode += '};\n';
-    writeFileSync(path.resolve(apiDir, "naming/api-validators.js"), moduleCode);
+    writeFileSync(path.resolve(apiDir, "naming/validators.js"), moduleCode);
 }
 
 function compileNodeApiSchemas() {
