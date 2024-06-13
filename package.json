@@ -33,6 +33,24 @@
     "@types/node": "^20.14.2",
     "typescript": "^5.4.5"
   },
+  "exports": {
+    "./naming": {
+      "types": "./typings/naming/index.d.ts",
+      "default": "./lib/namimg/index.js"
+    },
+    "./naming/types": {
+      "types": "./typings/naming/types/index.d.ts",
+      "default": "./lib/namimg/types/index.js"
+    },
+    "./node": {
+      "types": "./typings/node/index.d.ts",
+      "default": "./lib/node/index.js"
+    },
+    "./node/types": {
+      "types": "./typings/node/types/index.d.ts",
+      "default": "./lib/node/types/index.js"
+    }
+  },
   "keywords": [
     "moera",
     "social",
