@@ -22,7 +22,6 @@
   },
   "types": "./typings/index.d.ts",
   "dependencies": {
-    "@types/lodash.clonedeep": "^4.5.9",
     "ajv": "^8.16.0",
     "ajv-formats": "^3.0.1",
     "change-case": "^5.4.4",
@@ -30,6 +29,7 @@
     "lodash.clonedeep": "^4.5.0"
   },
   "devDependencies": {
+    "@types/lodash.clonedeep": "^4.5.9",
     "@types/node": "^20.14.2",
     "typescript": "^5.4.5"
   },
