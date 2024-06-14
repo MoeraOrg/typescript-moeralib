@@ -21,3 +21,8 @@
 
 *.iml
 .*.swp
+
+src/
+nodejs-moera-api/
+schemas.*
+schemas-compile.*
