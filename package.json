@@ -1,7 +1,7 @@
 {
   "name": "moeralib",
   "version": "0.15.0",
-  "description": "Modern Telegram Bot Framework",
+  "description": "TypeScript (JavaScript) library to interact with Moera decentralized social network",
   "repository": {
     "type": "git",
     "url": "https://github.com/MoeraOrg/typescript-moeralib.git"
