@@ -1,7 +1,7 @@
 {
   "name": "moeralib",
-  "version": "0.15.1",
-  "description": "TypeScript (JavaScript) library to interact with Moera decentralized social network",
+  "version": "0.15.2",
+  "description": "Library to interact with Moera decentralized social network",
   "repository": {
     "type": "git",
     "url": "https://github.com/MoeraOrg/typescript-moeralib.git"
