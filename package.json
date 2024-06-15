@@ -39,16 +39,16 @@
       "default": "./lib/naming/index.js"
     },
     "./naming/types": {
-      "types": "./typings/naming/types/index.d.ts",
-      "default": "./lib/naming/types/index.js"
+      "types": "./typings/naming/types.d.ts",
+      "default": "./lib/naming/types.js"
     },
     "./node": {
       "types": "./typings/node/index.d.ts",
       "default": "./lib/node/index.js"
     },
     "./node/types": {
-      "types": "./typings/node/types/index.d.ts",
-      "default": "./lib/node/types/index.js"
+      "types": "./typings/node/types.d.ts",
+      "default": "./lib/node/types.js"
     },
     "./universal-location": {
       "types": "./typings/universal-location.d.ts",
