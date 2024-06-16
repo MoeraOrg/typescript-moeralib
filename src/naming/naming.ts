@@ -336,6 +336,9 @@ export function parseNodeName(nodeName: string): [string, number] {
  * @param {string | null} nodeName - the node name in compact or full form
  * @return {string | null} the node name in the compact form
  */
+export function shorten(nodeName: null): null;
+export function shorten(nodeName: string): string;
+export function shorten(nodeName: string | null): string | null;
 export function shorten(nodeName: string | null): string | null {
     if (nodeName === null) {
         return null;
@@ -354,6 +357,9 @@ export function shorten(nodeName: string | null): string | null {
  * @param {string | null} nodeName - the node name in compact or full form
  * @return {string | null} the node name in the full form
  */
+export function expand(nodeName: null): null;
+export function expand(nodeName: string): string;
+export function expand(nodeName: string | null): string | null;
 export function expand(nodeName: string | null): string | null {
     if (nodeName === null) {
         return null;

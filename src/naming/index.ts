@@ -10,3 +10,4 @@ export {
     resolve,
     shorten
 } from "./naming";
+export { validateSchema as validateNamingSchema } from "./validate";
