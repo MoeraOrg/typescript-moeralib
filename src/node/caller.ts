@@ -58,7 +58,7 @@ export class MoeraNodeConnectionError extends Error {
 /**
  * Missing context of the call (authentication parameters or node URL).
  */
-export class MoeraCallError extends Error {
+export class MoeraNodeCallError extends Error {
 
     /**
      * @param {string} message - error message
@@ -211,7 +211,7 @@ interface CallOptions {
      */
     auth?: boolean;
     /**
-     * JSON schema to validate the response
+     * JSON schema name to validate the response, or ``"blob"`` if the result is ``Buffer``
      */
     schema: string;
     /**
@@ -368,18 +368,18 @@ export class Caller {
                     } else if (this._carte != null) {
                         bearer = "carte:" + this._carte;
                     } else {
-                        throw new MoeraCallError("Carte is not set");
+                        throw new MoeraNodeCallError("Carte is not set");
                     }
                     break;
                 case "admin":
                     if (this._token == null) {
-                        throw new MoeraCallError("Token is not set");
+                        throw new MoeraNodeCallError("Token is not set");
                     }
                     bearer = "token:" + this._token;
                     break;
                 case "root-admin":
                     if (this._rootSecret == null) {
-                        throw new MoeraCallError("Root secret is not set");
+                        throw new MoeraNodeCallError("Root secret is not set");
                     }
                     bearer = "secret:" + this._rootSecret;
                     break;
@@ -390,7 +390,7 @@ export class Caller {
         }
 
         if (this.root == null) {
-            throw new MoeraCallError("Node URL is not set");
+            throw new MoeraNodeCallError("Node URL is not set");
         }
 
         let url = urlWithParameters(this.root + "/api" + location, params);

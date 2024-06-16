@@ -307,7 +307,7 @@ export class MoeraNaming {
  * Parse a node name and return its name and generation parts.
  *
  * If the node name does not include a generation, generation 0 is returned. If name syntax is invalid, ``Error``
- * is raised.
+ * is thrown.
  *
  * @param {string} nodeName - the node name to be parsed
  * @return {[string, number]} [name, generation]
