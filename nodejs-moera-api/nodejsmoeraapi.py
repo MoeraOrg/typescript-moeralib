@@ -6,11 +6,49 @@ from enum import Enum
 from typing import Any, TextIO
 
 import yaml
-from camel_converter import to_pascal
 
 
 def ind(n: int) -> str:
     return n * 4 * ' '
+
+
+def doc_wrap(s: str, indent: int) -> str:
+    s = s.strip()
+    if '\n' in s:
+        return f'\n{ind(indent)}'.join(doc_wrap(c, indent) for c in s.split('\n'))
+
+    max_length = 120 - indent * 4 - 3
+    result = ''
+    while True:
+        if len(s) < max_length:
+            result += ' * ' + s
+            break
+        pos = 0
+        while True:
+            next = s.find(' ', pos + 1)
+            if next < 0 or next >= max_length:
+                break
+            pos = next
+        result += ' * ' + s[:pos] + '\n' + ind(indent)
+        s = s[pos + 1:]
+    return result
+
+
+def html_to_doc(s: str) -> str:
+    s = (s.replace('<code>', '``')
+          .replace('</code>', '``')
+          .replace('<br>', '\\\n')
+          .replace('<i>', '*')
+          .replace('</i>', '*')
+          .replace('<b>', '**')
+          .replace('</b>', '**')
+          .replace('<ul>', '\n')
+          .replace('<li>', '* ')
+          .replace('</li>', '')
+          .replace('</ul>', ''))
+    s = re.sub(r'<a [^>]*>', '', s)
+    s = s.replace('</a>', '')
+    return s
 
 
 def read_api(ifname: str) -> Any:
@@ -114,7 +152,9 @@ def generate_operations(operations: Any, tfile: TextIO, sfile: TextIO) -> None:
     tfile.write('\n')
     tfile.write(f'export interface {operations["name"]} {{\n')
     for field in operations['fields']:
-        tfile.write(f'    {field["name"]}?: PrincipalValue | null;\n')
+        if 'description' in field:
+            tfile.write(f'{ind(1)}/**\n{ind(1)} * {field["description"]}\n{ind(1)} */\n')
+        tfile.write(f'{ind(1)}{field["name"]}?: PrincipalValue | null;\n')
     tfile.write('}\n')
 
     sfile.write('\n')
@@ -276,6 +316,10 @@ class Structure(Interface):
                 t = to_js_type(field['type'])
             if field.get('array', False):
                 t += '[]'
+            if 'description' in field:
+                tfile.write(f'{ind(1)}/**\n')
+                tfile.write(ind(1) + doc_wrap(html_to_doc(field["description"]), 1))
+                tfile.write(f'\n{ind(1)} */\n')
             tfile.write(tmpl % (field['name'], t))
         tfile.write('}\n')
         if self.generic:
@@ -406,7 +450,8 @@ def generate_calls(api: Any, structs: dict[str, Structure], afile: TextIO) -> No
             url_params: dict[str, str] = {}
             flag_name: str | None = None
             flag_js_name: str | None = None
-            flags: list[str] = []
+            flags: list[Any] = []
+            param_docs = []
             for param in request.get('params', []) + request.get('query', []):
                 if 'name' not in param:
                     print('Missing name of parameter of the request "{method} {url}"'
@@ -422,14 +467,18 @@ def generate_calls(api: Any, structs: dict[str, Structure], afile: TextIO) -> No
                 if 'flags' in param:
                     flag_name = name
                     flag_js_name = js_name
-                    flags = [flag['name'] for flag in param['flags']]
+                    flags = [flag for flag in param['flags']]
                     for flag in flags:
-                        params.append('with{name}: boolean = false'.format(name=flag.capitalize()))
+                        flag_param = f'with{flag["name"].capitalize()}'
+                        params.append(f'{flag_param}: boolean = false')
+                        param_docs += [(flag_param, 'include ' + flag.get('description', ''), 'boolean')]
                 else:
                     if param.get('optional', False):
                         tail_params.append(f'{js_name}: {js_type} | null = null')
+                        param_docs += [(js_name, param.get('description', ''), f'{js_type} | null')]
                     else:
                         params.append(f'{js_name}: {js_type}')
+                        param_docs += [(js_name, param.get('description', ''), js_type)]
             body = ''
             if 'in' in request:
                 if 'type' in request['in']:
@@ -437,8 +486,9 @@ def generate_calls(api: Any, structs: dict[str, Structure], afile: TextIO) -> No
                         print('Unrecognised type "{type}" of the input body of the request "{method} {url}"'
                               .format(type=request['in']['type'], method=request['type'], url=request['url']))
                         exit(1)
-                    body = ', body'
-                    params.append('body: Buffer')
+                    body = ', body, contentType'
+                    params += ['body: Buffer', 'contentType: string']
+                    param_docs += [('body', '', 'Buffer'), ('contentType', 'content-type of ``body``', 'string')]
                 else:
                     if 'name' not in request['in']:
                         print('Missing name of body of the request "{method} {url}"'
@@ -450,6 +500,7 @@ def generate_calls(api: Any, structs: dict[str, Structure], afile: TextIO) -> No
                         js_type += '[]'
                     body = f', body: {name}'
                     params.append(f'{name}: {js_type}')
+                    param_docs += [(name, request['in'].get('description', ''), js_type)]
             params += tail_params
 
             method = request['type']
@@ -494,10 +545,24 @@ def generate_calls(api: Any, structs: dict[str, Structure], afile: TextIO) -> No
                         result += '[]'
                         result_schema += 'Array'
 
+            description = ''
+            if 'description' in request:
+                description = doc_wrap(html_to_doc(request["description"]), 1)
+            description += f'\n{ind(1)} *'
+            if len(param_docs) > 0:
+                for pd in param_docs:
+                    param_doc = ' - ' + html_to_doc(pd[1]) if pd[1] != '' else ''
+                    doc = doc_wrap(f'@param {{{pd[2]}}} {pd[0]}{param_doc}', 1)
+                    description += f'\n{ind(1)}{doc}'
+            description += f'\n{ind(1)}' + doc_wrap(f'@return {{Promise<{result}>}}', 1)
+            if description != '':
+                description = f'\n{ind(1)}/**\n{ind(1)}{description}\n{ind(1)} */'
+
+            afile.write(description)
             name = request['function']
             afile.write(params_wrap(f'\n{ind(1)}async {name}(%s): Promise<{result}> {{\n', ', '.join(params), 2))
             if flag_name is not None:
-                items = ', '.join('"%s": with%s' % (flag, flag.capitalize()) for flag in flags)
+                items = ', '.join('"%s": with%s' % (flag['name'], flag['name'].capitalize()) for flag in flags)
                 afile.write(f'{ind(2)}const {flag_js_name} = commaSeparatedFlags({{{items}}});\n')
             afile.write(f'{ind(2)}const location = {location};\n')
             query_params = ''
@@ -533,8 +598,14 @@ import { Caller } from "./caller";
 import * as API from "./types";
 import { commaSeparatedFlags, ut } from "../util";
 
+/**
+ * Node API interface.
+ */
 export class MoeraNode extends Caller {
 
+    /**
+     * @param {string | null} nodeUrl - the node URL
+     */
     constructor(nodeUrl: string | null = null) {
         super();
         if (nodeUrl != null) {

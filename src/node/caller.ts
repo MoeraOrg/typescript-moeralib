@@ -5,18 +5,35 @@ import { validateSchema } from "./validate";
 import { urlWithParameters } from "../util";
 import { formatSchemaErrors } from "../schema";
 
+/**
+ * Generic node error.
+ */
 export class MoeraNodeError extends Error {
 
+    /**
+     * @param {string} name - request name
+     * @param {string} message - error message
+     */
     constructor(name: string, message: string) {
         super(name + ": Node error: " + message);
     }
 
 }
 
+/**
+ * Node returned an error response.
+ */
 export class MoeraNodeApiError extends MoeraNodeError {
 
+    /**
+     * Error code.
+     */
     errorCode: string;
 
+    /**
+     * @param {string} name - request name
+     * @param {Result} result - node response
+     */
     constructor(name: string, result: Result) {
         super(name, result.message);
         this.errorCode = result.errorCode;
@@ -24,16 +41,28 @@ export class MoeraNodeApiError extends MoeraNodeError {
 
 }
 
+/**
+ * Error while connecting the node.
+ */
 export class MoeraNodeConnectionError extends Error {
 
+    /**
+     * @param {string} message - error message
+     */
     constructor(message: string) {
         super("Node connection error: " + message);
     }
 
 }
 
+/**
+ * Missing context of the call (authentication parameters or node URL).
+ */
 export class MoeraCallError extends Error {
 
+    /**
+     * @param {string} message - error message
+     */
     constructor(message: string) {
         super(message);
     }
@@ -121,12 +150,26 @@ function decodeBodies(name: string, data: Structure | Structure[]): Structure | 
     return decoded;
 }
 
+/**
+ * Authentication type.
+ *
+ * "none" - No authentication.\
+ * "peer" - Carte authentication.\
+ * "admin" - Admin token authentication.\
+ * "root-admin" - Root admin secret authentication.
+ */
 export type NodeAuth = "none" | "peer" | "admin" | "root-admin";
 
 export interface CarteSource {
     getCarte: () => Promise<string>;
 }
 
+/**
+ * Convert partial node URL to a standardized form.
+ *
+ * @param {string} url - partial URL
+ * @return {string} standard URL
+ */
 export function moeraRoot(url: string): string {
     if (!url.startsWith("http:") && !url.startsWith("https:")) {
         url = "https://" + url;
@@ -143,19 +186,49 @@ export function moeraRoot(url: string): string {
     return url;
 }
 
+/**
+ * Parameters of a node API request.
+ */
 interface CallOptions {
+    /**
+     * Query parameters, mapping name to value, ``null`` values are skipped
+     */
     params?: Partial<Record<string, string | number | boolean | null>> | null
+    /**
+     * Request method (one of 'GET', 'POST', 'PUT', 'DELETE'), the default is 'GET'
+     */
     method: string;
+    /**
+     * Request body
+     */
     body?: Structure | Structure[] | Buffer | null;
+    /**
+     * Content-Type of the request body, when it is not a JSON structure
+     */
     contentType?: string | null;
+    /**
+     * `true` (default) to authenticate the request, `false` otherwise
+     */
     auth?: boolean;
+    /**
+     * JSON schema to validate the response
+     */
     schema: string;
+    /**
+     * `true` to decode `Body` structures in the response, `false` (default) otherwise
+     */
     bodies?: boolean;
+    /**
+     * `true` to encode `Body` structures in the request, `false` (default) otherwise
+     */
     srcBodies?: boolean;
 }
 
 export class Caller {
 
+    /**
+     * API endpoint URL of the node.
+     */
     root: string | null = null;
     private _rootSecret: string | null = null;
     private _token: string | null = null;
@@ -163,46 +236,103 @@ export class Caller {
     private _carteSource: CarteSource | null = null;
     private _authMethod: NodeAuth = "none";
 
+    /**
+     * Set node URL.
+     *
+     * @param {string} url
+     */
     nodeUrl(url: string): void {
         this.root = moeraRoot(url);
     }
 
+    /**
+     * Set root secret for authentication.
+     *
+     * @param {string} secret
+     */
     rootSecret(secret: string): void {
         this._rootSecret = secret;
     }
 
+    /**
+     * Set admin token for authentication.
+     *
+     * @param {string} token
+     */
     token(token: string): void {
         this._token = token
     }
 
+    /**
+     * Set carte for authentication.
+     *
+     * @param {string} carte
+     */
     carte(carte: string): void {
         this._carte = carte
     }
 
+    /**
+     * Set a source of cartes for authentication.
+     * @param {CarteSource} carteSource
+     */
     carteSource(carteSource: CarteSource): void {
         this._carteSource = carteSource;
     }
 
+    /**
+     * Select authentication method for the following requests.
+     *
+     * @param {NodeAuth} authMethod
+     */
     authMethod(authMethod: NodeAuth): void {
         this._authMethod = authMethod;
     }
 
+    /**
+     * Switch off authentication for the following requests.
+     */
     noAuth(): void {
         this.authMethod("none");
     }
 
+    /**
+     * Select carte authentication for the following requests.
+     */
     auth(): void {
         this.authMethod("peer");
     }
 
+    /**
+     * Select admin token authentication for the following requests.
+     */
     authAdmin(): void {
         this.authMethod("admin");
     }
 
+    /**
+     * Select root admin secret authentication for the following requests.
+     */
     authRootAdmin(): void {
         this.authMethod("root-admin");
     }
 
+    /**
+     * Generic method for making node API requests.
+     *
+     * @param {string} name - request name (for error messages)
+     * @param {string} location - request path
+     * @param {Partial<Record<string, string | number | boolean | null>> | null} params - query parameters, mapping
+     *     name to value, ``null`` values are skipped
+     * @param {string} method - request method (one of 'GET', 'POST', 'PUT', 'DELETE'), the default is 'GET'
+     * @param {Structure | Structure[] | Buffer | null} body - request body
+     * @param {string | null} contentType - content-type of the request body, when it is not a JSON structure
+     * @param {boolean} auth - `true` (default) to authenticate the request, `false` otherwise
+     * @param {string} schema - JSON schema to validate the response
+     * @param {boolean} bodies - `true` to decode `Body` structures in the response, `false` (default) otherwise
+     * @param {boolean} srcBodies - `true` to encode `Body` structures in the request, `false` (default) otherwise
+     * @return {Promise<any>}
+     */
     async call(
         name: string,
         location: string,

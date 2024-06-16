@@ -3,6 +3,9 @@ import { shorten } from "./naming";
 
 export const REDIRECTOR = "moera.page";
 
+/**
+ * Represents location part of a universal Moera URL.
+ */
 class UniversalLocation {
 
     private _nodeName: string | null = null;
@@ -10,9 +13,23 @@ class UniversalLocation {
     private _authority: string | null = null;
     private _path: string | null = null;
 
+    /**
+     * Query component of the URL.
+     */
     query: string | null;
+    /**
+     * Fragment identifier of the URL.
+     */
     fragment: string | null;
 
+    /**
+     * @param {string | null} nodeName - the node name
+     * @param {string | null} scheme - scheme specifier of the node location (``'https'``, if set to `null` or empty)
+     * @param {string | null} authority - authority (host name and optional port) of the node location
+     * @param {string | null} path - virtual path at the node (``'/'``, if set to `null` or empty)
+     * @param {string | null} query - query component of the URL (without ``?``)
+     * @param {string | null} fragment - fragment identifier of the URL (without ``#``)
+     */
     constructor(
         nodeName: string | null = null,
         scheme: string | null = null,
@@ -29,34 +46,74 @@ class UniversalLocation {
         this.fragment = fragment;
     }
 
+    /**
+     * The node name.
+     *
+     * @return {string | null}
+     */
     get nodeName(): string | null {
         return this._nodeName;
     }
 
+    /**
+     * The node name.
+     *
+     * @param {string | null} nodeName
+     */
     set nodeName(nodeName: string | null) {
         this._nodeName = shorten(nodeName);
     }
 
+    /**
+     * Scheme specifier of the node location.
+     *
+     * @return {string | null}
+     */
     get scheme(): string {
         return this._scheme;
     }
 
+    /**
+     * Scheme specifier of the node location.
+     *
+     * @param {string | null} scheme
+     */
     set scheme(scheme: string | null) {
         this._scheme = scheme || "https";
     }
 
+    /**
+     * Authority (host name and optional port) of the node location.
+     *
+     * @return {string | null}
+     */
     get authority(): string | null {
         return this._authority;
     }
 
+    /**
+     * Authority (host name and optional port) of the node location.
+     *
+     * @param {string | null} authority
+     */
     set authority(authority: string | null) {
         this._authority = authority || null;
     }
 
+    /**
+     * Virtual path at the node.
+     *
+     * @return {string | null}
+     */
     get path(): string | null {
         return this._path;
     }
 
+    /**
+     * Virtual path at the node.
+     *
+     * @param {string | null} path
+     */
     set path(path: string | null) {
         if (path?.startsWith("/moera")) {
             path = path.substring(6);
@@ -64,6 +121,11 @@ class UniversalLocation {
         this._path = path || "/";
     }
 
+    /**
+     * Universal Moera location (without query and fragment).
+     *
+     * @return {string | null}
+     */
     get location(): string {
         let loc = "/@";
         if (this._nodeName != null) {
@@ -99,6 +161,12 @@ function stripFirst(s: string | null | undefined): string | null {
     return s != null && s.length > 1 ? s.substring(1) : null;
 }
 
+/**
+ * Parse the location part (including query and fragment) of a universal URL.
+ *
+ * @param {string | null} url - the URL to be parsed
+ * @return {UniversalLocation} the parsed location
+ */
 export function parse(url: string | null): UniversalLocation {
     if (url == null) {
         return new UniversalLocation();
@@ -161,6 +229,13 @@ export function parse(url: string | null): UniversalLocation {
     return new UniversalLocation(nodeName, scheme, authority, path, query, fragment);
 }
 
+/**
+ * Build a universal Moera URL from the direct URL of a page on a node, adding the node name provided.
+ *
+ * @param {string | null} nodeName - the node name
+ * @param {string | null} url - the direct URL
+ * @return {string} the universal URL
+ */
 export function redirectToUrl(nodeName: string | null, url: string | null = null): string {
     try {
         let uni: UniversalLocation;
@@ -183,6 +258,16 @@ export function redirectToUrl(nodeName: string | null, url: string | null = null
     }
 }
 
+/**
+ * Build a universal Moera URL from the node name, the Moera root URL of the node, virtual path and other components.
+ *
+ * @param {string | null} nodeName - the node name
+ * @param {string | null} rootUrl - the Moera root URL of the node
+ * @param {string | null} path - virtual path at the node (``'/'``, if set to `null` or empty)
+ * @param {string | null} query - query component of the URL
+ * @param {string | null} fragment - fragment identifier of the URL
+ * @return {string} the universal URL
+ */
 export function redirectTo(
     nodeName: string | null,
     rootUrl: string | null,
