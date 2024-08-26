@@ -559,7 +559,18 @@ export const NODE_API_SCHEMAS = {
                 "deadline": {
                     type: "integer"
                 },
-                "permissions": {
+                "nodeName": {
+                    type: "string",
+                    nullable: true
+                },
+                "clientScope": {
+                    type: "array",
+                    items: {
+                        type: "string"
+                    },
+                    nullable: true
+                },
+                "adminScope": {
                     type: "array",
                     items: {
                         type: "string"
@@ -595,6 +606,45 @@ export const NODE_API_SCHEMAS = {
             required: [
                 "cartes",
                 "createdAt",
+            ],
+            additionalProperties: false
+        },
+
+        CarteVerificationInfo: {
+            type: "object",
+            properties: {
+                "valid": {
+                    type: "boolean"
+                },
+                "clientName": {
+                    type: "string",
+                    nullable: true
+                },
+                "clientScope": {
+                    type: "array",
+                    items: {
+                        type: "string"
+                    },
+                    nullable: true
+                },
+                "adminScope": {
+                    type: "array",
+                    items: {
+                        type: "string"
+                    },
+                    nullable: true
+                },
+                "errorCode": {
+                    type: "string",
+                    nullable: true
+                },
+                "errorMessage": {
+                    type: "string",
+                    nullable: true
+                },
+            },
+            required: [
+                "valid",
             ],
             additionalProperties: false
         },
@@ -1117,6 +1167,33 @@ export const NODE_API_SCHEMAS = {
                 "title",
             ],
             additionalProperties: false
+        },
+
+        GrantInfo: {
+            type: "object",
+            properties: {
+                "nodeName": {
+                    type: "string"
+                },
+                "scope": {
+                    type: "array",
+                    items: {
+                        type: "string"
+                    }
+                },
+            },
+            required: [
+                "nodeName",
+                "scope",
+            ],
+            additionalProperties: false
+        },
+
+        GrantInfoArray: {
+            type: "array",
+            items: {
+                $ref: "node#/definitions/GrantInfo"
+            }
         },
 
         LinkPreview: {

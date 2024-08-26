@@ -272,19 +272,31 @@ export class MoeraNode extends Caller {
     }
 
     /**
-     * Get a set of cartes that correspond to successive periods of time. Two sequences of cartes are returned: one
-     * with all permissions and another with `view-media` permission only. The node may decide to return fewer cartes
-     * than the given ``limit``.
+     * Create a set of cartes with the given attributes. Cartes in the sequence correspond to successive periods of
+     * time.
      *
-     * @param {number | null} limit - maximum number of sequential cartes returned
+     * @param {API.CarteAttributes} attributes
      * @return {Promise<API.CarteSet>}
      */
-    async getCartes(limit: number | null = null): Promise<API.CarteSet> {
-        const location = ut`/cartes`;
-        const params = {limit};
-        return await this.call("getCartes", location, {
-            method: "GET", params, schema: "CarteSet"
+    async createCartes(attributes: API.CarteAttributes): Promise<API.CarteSet> {
+        const location = "/cartes";
+        return await this.call("createCartes", location, {
+            method: "POST", body: attributes, schema: "CarteSet"
         }) as API.CarteSet;
+    }
+
+    /**
+     * Verify if the given carte may be used for authentication on this node. Additionally, if ``clientName`` is
+     * provided, it is compared to the carte owner's name.
+     *
+     * @param {API.ClientCarte} clientCarte
+     * @return {Promise<API.CarteVerificationInfo>}
+     */
+    async verifyCarte(clientCarte: API.ClientCarte): Promise<API.CarteVerificationInfo> {
+        const location = "/cartes/verify";
+        return await this.call("verifyCarte", location, {
+            method: "POST", body: clientCarte, schema: "CarteVerificationInfo"
+        }) as API.CarteVerificationInfo;
     }
 
     /**
@@ -1114,14 +1126,83 @@ export class MoeraNode extends Caller {
     }
 
     /**
-     * Upload a new media file. Content of the file is passed in the request body
+     * Get the list of all nodes having administrative permissions on this node.
+     *
+     * @return {Promise<API.GrantInfo[]>}
+     */
+    async getAllGrants(): Promise<API.GrantInfo[]> {
+        const location = "/grants";
+        return await this.call("getAllGrants", location, {
+            method: "GET", schema: "GrantInfoArray"
+        }) as API.GrantInfo[];
+    }
+
+    /**
+     * Get information about the administrative permissions granted to the node.
+     *
+     * @param {string} remoteNodeName - name of the node
+     * @return {Promise<API.GrantInfo>}
+     */
+    async getGrant(remoteNodeName: string): Promise<API.GrantInfo> {
+        const location = ut`/grants/${remoteNodeName}`;
+        return await this.call("getGrant", location, {
+            method: "GET", schema: "GrantInfo"
+        }) as API.GrantInfo;
+    }
+
+    /**
+     * Grant a set of administrative permissions to the node or revoke them.
+     *
+     * @param {string} remoteNodeName - name of the node
+     * @param {API.GrantChange} change
+     * @return {Promise<API.GrantInfo>}
+     */
+    async grantOrRevoke(remoteNodeName: string, change: API.GrantChange): Promise<API.GrantInfo> {
+        const location = ut`/grants/${remoteNodeName}`;
+        return await this.call("grantOrRevoke", location, {
+            method: "PUT", body: change, schema: "GrantInfo"
+        }) as API.GrantInfo;
+    }
+
+    /**
+     * Revoke all administrative permissions granted to the node.
+     *
+     * @param {string} remoteNodeName - name of the node
+     * @return {Promise<API.Result>}
+     */
+    async revokeAll(remoteNodeName: string): Promise<API.Result> {
+        const location = ut`/grants/${remoteNodeName}`;
+        return await this.call("revokeAll", location, {
+            method: "DELETE", schema: "Result"
+        }) as API.Result;
+    }
+
+    /**
+     * Upload a new media file owned by the node admin. Content of the file is passed in the request body.
      *
      * @param {Buffer} body
      * @param {string} contentType - content-type of ``body``
      * @return {Promise<API.PrivateMediaFileInfo>}
      */
-    async uploadPrivateMedia(body: Buffer, contentType: string): Promise<API.PrivateMediaFileInfo> {
+    async uploadAdminMedia(body: Buffer, contentType: string): Promise<API.PrivateMediaFileInfo> {
         const location = "/media/private";
+        return await this.call("uploadAdminMedia", location, {
+            method: "POST", body, contentType, schema: "PrivateMediaFileInfo"
+        }) as API.PrivateMediaFileInfo;
+    }
+
+    /**
+     * Upload a new media file owned by the given node. Content of the file is passed in the request body.
+     *
+     * @param {string} clientName - name of the node owning the media file
+     * @param {Buffer} body
+     * @param {string} contentType - content-type of ``body``
+     * @return {Promise<API.PrivateMediaFileInfo>}
+     */
+    async uploadPrivateMedia(
+        clientName: string, body: Buffer, contentType: string
+    ): Promise<API.PrivateMediaFileInfo> {
+        const location = ut`/media/private/${clientName}`;
         return await this.call("uploadPrivateMedia", location, {
             method: "POST", body, contentType, schema: "PrivateMediaFileInfo"
         }) as API.PrivateMediaFileInfo;
@@ -2379,16 +2460,17 @@ export class MoeraNode extends Caller {
     }
 
     /**
-     * Update the name of the token.
+     * Update the name or permissions of the token. It is not possible to grant token additional permissions with this
+     * request, but the granted permissions can be revoked.
      *
      * @param {string} id - ID of the token
-     * @param {API.TokenName} token
+     * @param {API.TokenUpdate} update
      * @return {Promise<API.TokenInfo>}
      */
-    async updateToken(id: string, token: API.TokenName): Promise<API.TokenInfo> {
+    async updateToken(id: string, update: API.TokenUpdate): Promise<API.TokenInfo> {
         const location = ut`/tokens/${id}`;
         return await this.call("updateToken", location, {
-            method: "PUT", body: token, schema: "TokenInfo"
+            method: "PUT", body: update, schema: "TokenInfo"
         }) as API.TokenInfo;
     }
 

@@ -22,6 +22,12 @@ export type PushContentType = "story-added" | "story-deleted" | "feed-updated";
 
 export type PushRelayType = "fcm";
 
+export type Scope = "none" | "identify" | "other" | "view-media" | "view-content" | "add-post" | "update-post"
+    | "add-comment" | "update-comment" | "react" | "delete-own-content" | "delete-others-content" | "view-people"
+    | "block" | "friend" | "remote-identify" | "drafts" | "view-feeds" | "update-feeds" | "name" | "plugins"
+    | "view-profile" | "update-profile" | "sheriff" | "view-settings" | "update-settings" | "subscribe" | "tokens"
+    | "user-lists" | "grant" | "upload-public-media" | "upload-private-media" | "view-all" | "all";
+
 export type SettingType = "bool" | "int" | "string" | "json" | "Duration" | "PrivateKey" | "PublicKey" | "Timestamp"
     | "UUID" | "Principal";
 
@@ -659,6 +665,27 @@ export interface BlockedUsersChecksums {
     visibility: number;
 }
 
+export interface CarteAttributes {
+    /**
+     * permissions to be granted to the carte; if not set, all permissions of the carte's owner are granted
+     */
+    clientScope?: Scope[] | null;
+    /**
+     * additional administrative permissions (of those granted to the carte's owner by the target node) to be granted
+     * to the carte
+     */
+    adminScope?: Scope[] | null;
+    /**
+     * if set, the carte is valid for authentication on the specified node only
+     */
+    nodeName?: string | null;
+    /**
+     * maximum number of sequential cartes to be returned; the node may decide to return fewer cartes than the given
+     * limit
+     */
+    limit?: number | null;
+}
+
 export interface CarteInfo {
     carte: string;
     /**
@@ -670,12 +697,18 @@ export interface CarteInfo {
      */
     deadline: number;
     /**
-     * the list of permissions granted to the carte; the possible values are:
-     * 
-     * * ``other`` - any other permission not listed below;
-     * * ``view-media`` - view media files.
+     * if set, the carte is valid for authentication on the specified node only
      */
-    permissions?: string[] | null;
+    nodeName?: string | null;
+    /**
+     * the list of permissions granted to the carte
+     */
+    clientScope?: Scope[] | null;
+    /**
+     * the list of additional administrative permissions (of those granted to the carte's owner by the target node)
+     * granted to the carte
+     */
+    adminScope?: Scope[] | null;
 }
 
 export interface CarteSet {
@@ -691,6 +724,45 @@ export interface CarteSet {
      * cartes creation timestamp
      */
     createdAt: number;
+}
+
+export interface CarteVerificationInfo {
+    /**
+     * ``true``, if the carte can be accepted for authentication, ``false`` otherwise
+     */
+    valid: boolean;
+    /**
+     * name of the node the carte authenticates
+     */
+    clientName?: string | null;
+    /**
+     * the list of permissions granted to the carte
+     */
+    clientScope?: Scope[] | null;
+    /**
+     * the list of additional administrative permissions (of those granted to the carte's owner by the target node)
+     * granted to the carte
+     */
+    adminScope?: Scope[] | null;
+    /**
+     * error code
+     */
+    errorCode?: string | null;
+    /**
+     * human-readable error message
+     */
+    errorMessage?: string | null;
+}
+
+export interface ClientCarte {
+    /**
+     * the node name the client (carte owner) wants to authenticate under
+     */
+    clientName?: string | null;
+    /**
+     * the carte to verify
+     */
+    carte: string;
 }
 
 export interface ClientReactionInfo {
@@ -1053,6 +1125,28 @@ export interface FundraiserInfo {
      * link to the fundraiser
      */
     href?: string | null;
+}
+
+export interface GrantChange {
+    /**
+     * a set of permissions to be granted or revoked
+     */
+    scope: Scope[];
+    /**
+     * ``true`` if the permissions must be revoked, ``false`` if the permissions must be granted
+     */
+    revoke: boolean;
+}
+
+export interface GrantInfo {
+    /**
+     * name of the node the permissions are granted to
+     */
+    nodeName: string;
+    /**
+     * the set of administrative permissions granted to the node
+     */
+    scope: Scope[];
 }
 
 export interface LinkPreview {
@@ -2710,13 +2804,10 @@ export interface TokenAttributes {
     login: string;
     password: string;
     /**
-     * A bit mask describing which permissions should be granted to the token. If not set, all permissions of the
-     * administrator are granted. The bits have the following meaning:
-     * 
-     * * ``other (0x0001)`` - any other permission not listed below;
-     * * ``view-media (0x0002)`` - view media files.
+     * a bit mask describing which permissions should be granted to the token; if not set, all permissions of the
+     * administrator are granted.
      */
-    authCategory?: number | null;
+    permissions?: Scope[] | null;
     /**
      * a user-readable name of the token
      */
@@ -2737,12 +2828,9 @@ export interface TokenInfo {
      */
     name?: string | null;
     /**
-     * The list of permissions granted to the token. The values are:
-     * 
-     * * ``other`` - any other permission not listed below;
-     * * ``view-media`` - view media files.
+     * the list of permissions granted to the token
      */
-    permissions: string[];
+    permissions: Scope[];
     /**
      * a plugin the token belongs to; if set, only this plugin may use the token
      */
@@ -2769,11 +2857,16 @@ export interface TokenInfo {
     lastUsedIp?: string | null;
 }
 
-export interface TokenName {
+export interface TokenUpdate {
     /**
      * a user-readable name of the token
      */
     name?: string | null;
+    /**
+     * a bit mask describing which permissions should be granted to the token; if not set, the token permissions are
+     * left untouched
+     */
+    permissions?: Scope[] | null;
 }
 
 export interface UpdateInfo {
