@@ -75,6 +75,12 @@ def generate_enum(enum: Any, tfile: TextIO) -> None:
     s += ';\n'
     tfile.write(s)
 
+    if any('value' in item for item in enum['values']):
+        tfile.write(f'\nexport const {to_snake(enum["name"]).upper()}_VALUES: Record<{enum["name"]}, number> = {{\n')
+        for item in enum['values']:
+            tfile.write(f'{ind(1)}"{item["name"]}": {item["value"]},\n')
+        tfile.write('};\n')
+
 
 def schema_type(sfile: TextIO, indent: int, a_type: str, struct: bool = False, nullable: bool = False,
                 default: Any = None, min: float | None = None, max: float | None = None) -> None:

@@ -28,6 +28,43 @@ export type Scope = "none" | "identify" | "other" | "view-media" | "view-content
     | "view-profile" | "update-profile" | "sheriff" | "view-settings" | "update-settings" | "subscribe" | "tokens"
     | "user-lists" | "grant" | "upload-public-media" | "upload-private-media" | "view-all" | "all";
 
+export const SCOPE_VALUES: Record<Scope, number> = {
+    "none": 0x00000000,
+    "identify": 0x00000000,
+    "other": 0x00000001,
+    "view-media": 0x00000002,
+    "view-content": 0x00000004,
+    "add-post": 0x00000008,
+    "update-post": 0x00000010,
+    "add-comment": 0x00000020,
+    "update-comment": 0x00000040,
+    "react": 0x00000080,
+    "delete-own-content": 0x00000100,
+    "delete-others-content": 0x00000200,
+    "view-people": 0x00000400,
+    "block": 0x00000800,
+    "friend": 0x00001000,
+    "remote-identify": 0x00002000,
+    "drafts": 0x00004000,
+    "view-feeds": 0x00008000,
+    "update-feeds": 0x00010000,
+    "name": 0x00020000,
+    "plugins": 0x00040000,
+    "view-profile": 0x00080000,
+    "update-profile": 0x00100000,
+    "sheriff": 0x00200000,
+    "view-settings": 0x00400000,
+    "update-settings": 0x00800000,
+    "subscribe": 0x01000000,
+    "tokens": 0x02000000,
+    "user-lists": 0x04000000,
+    "grant": 0x08000000,
+    "upload-public-media": 0x10000000,
+    "upload-private-media": 0x20000000,
+    "view-all": 0x00088406,
+    "all": 0x3fffffff,
+};
+
 export type SettingType = "bool" | "int" | "string" | "json" | "Duration" | "PrivateKey" | "PublicKey" | "Timestamp"
     | "UUID" | "Principal";
 
