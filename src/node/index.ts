@@ -7,5 +7,5 @@ export {
     MoeraNodeCallError,
     moeraRoot
 } from "./caller";
-export { MoeraCarteSource, MoeraCartesError } from "./cartes";
+export { MoeraCarteSource, MoeraCartesError, generateCarte } from "./cartes";
 export { validateSchema as validateNodeSchema } from "./validate";

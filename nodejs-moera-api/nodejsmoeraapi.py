@@ -686,7 +686,7 @@ def generate_fingerprint_function(schema: Any, name: str, version: int, ffile: T
     object_type = ''
     for field in schema['fingerprint']:
         field_name = field['field']
-        if field_name != 'object_type':
+        if field_name != 'objectType':
             if 'type' in field:
                 field_type = PY_FP_TYPES[field['type']]
             else:
@@ -697,7 +697,7 @@ def generate_fingerprint_function(schema: Any, name: str, version: int, ffile: T
             keys += f', {field_name}'
         else:
             value = field['comment'].removeprefix('<code>').removesuffix('</code>')
-            object_type = f", 'object_type': '{value}'"
+            object_type = f', "objectType": "{value}"'
     ffile.write(params_wrap(f'export function create{name}Fingerprint{version}(%s): Buffer {{\n', ', '.join(params), 1))
     schema_name = to_snake(name).upper()
     call_params = f'{{"version": {version}{object_type}{keys}}}, {schema_name}_FINGERPRINT{version}_SCHEMA'

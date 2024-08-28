@@ -39,6 +39,10 @@
       "types": "./typings/index.d.ts",
       "default": "./lib/index.js"
     },
+    "./crypto": {
+      "types": "./typings/crypto/index.d.ts",
+      "default": "./lib/crypto/index.js"
+    },
     "./naming": {
       "types": "./typings/naming/index.d.ts",
       "default": "./lib/naming/index.js"

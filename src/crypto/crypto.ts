@@ -112,6 +112,9 @@ export function rawToPrivateKey(rawPrivateKey: Buffer): crypto.KeyObject {
         format: "jwk",
         key: {
             kty: "EC",
+            // x and y here are placeholders
+            x: 'xJrw0U2Qb1xyoxpfwCYVwCZakhd-LbjeBvLLNGAPTEU',
+            y: 'INp-PvmYleX19zhuXbwfnIcZO9a8RSuK7r-_4jneDGM',
             d,
             crv: "secp256k1"
         }

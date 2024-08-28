@@ -1,6 +1,11 @@
-import { CarteAttributes, CarteInfo, Scope } from "./types";
+import crypto from 'crypto';
+import { promisify } from 'util';
+
+import { CarteAttributes, CarteInfo, Scope, SCOPE_VALUES } from "./types";
 import { CarteSource } from "./caller";
 import { MoeraNode } from "./node";
+import { createCarteFingerprint2 } from "./fingerprints";
+import { signFingerprint } from "../crypto";
 
 /**
  * Error obtaining valid cartes.
@@ -83,4 +88,57 @@ export class MoeraCarteSource implements CarteSource {
          throw new MoeraCartesError("Could not obtain a carte valid for now");
     }
 
+}
+
+function toScopeMask(scope: Scope[]): number {
+    let mask = 0;
+    for (const sc of scope) {
+        mask |= SCOPE_VALUES[sc];
+    }
+    return mask;
+}
+
+interface GenerateCarteOptions {
+    /** length of the carte's life, in seconds */
+    ttl?: number;
+    /** if set, the carte is valid for authentication from the given IP address only */
+    address?: string | null;
+    /** if set, the carte is valid for authentication on the specified node only */
+    nodeName?: string | null;
+    /** list of permissions granted to the carte */
+    clientScope?: Scope[] | number;
+    /**
+     * list of additional administrative permissions (of those granted to the carte's owner by the target node) granted
+     * to the carte
+     */
+    adminScope?: Scope[] | number;
+}
+
+/**
+ * Generate a carte with the given parameters and sign it with the provided private signing key.
+ *
+ * @param {string | null} ownerName - name of the node authenticating with the carte
+ * @param {crypto.KeyObject} signingKey - the private signing key to sign the carte
+ * @param {number} beginning - timestamp of the beginning of the carte's life
+ * @param {GenerateCarteOptions} options - carte options
+ * @return {Promise<string>} the carte
+ */
+export async function generateCarte(
+    ownerName: string | null, signingKey: crypto.KeyObject, beginning: number,
+    {
+        ttl = 600, address = null, nodeName = null, clientScope = SCOPE_VALUES["all"], adminScope = 0
+    }: GenerateCarteOptions = {}
+): Promise<string> {
+    if (Array.isArray(clientScope)) {
+        clientScope = toScopeMask(clientScope);
+    }
+    if (Array.isArray(adminScope)) {
+        adminScope = toScopeMask(adminScope);
+    }
+    const salt = await promisify(crypto.randomBytes)(8);
+    const fingerprint = createCarteFingerprint2(
+        ownerName, address, beginning, beginning + ttl, nodeName, clientScope, adminScope, salt
+    );
+    const signature = signFingerprint(fingerprint, signingKey);
+    return Buffer.concat([fingerprint, signature]).toString("base64url");
 }
