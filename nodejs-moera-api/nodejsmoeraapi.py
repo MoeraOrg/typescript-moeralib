@@ -6,6 +6,7 @@ from enum import Enum
 from typing import Any, TextIO
 
 import yaml
+from camel_converter import to_snake
 
 
 def ind(n: int) -> str:
@@ -636,14 +637,100 @@ def generate_types(api: Any, outdir: str) -> None:
         afile.write('\n}\n')
 
 
+FP_TYPES = {
+    'String': 'string',
+    'InetAddress': 'string',
+    'int': 'number',
+    'timestamp': 'number',
+    'byte': 'number',
+    'byte[]': 'bytes',
+    'boolean': 'boolean'
+}
+
+
+def generate_fingerprint_schema(schema: Any, name: str, version: int, ffile: TextIO) -> None:
+    ffile.write(f'\nconst {to_snake(name).upper()}_FINGERPRINT{version}_SCHEMA: FingerprintSchema = [\n')
+    ffile.write(f'{ind(1)}["version", "number"],\n')
+    for field in schema['fingerprint']:
+        if 'type' in field:
+            field_type = FP_TYPES[field['type']]
+        else:
+            field_type = 'bytes'
+        if field.get('array', False):
+            field_type += '[]'
+        field_name = field['field']
+        ffile.write(f'{ind(1)}["{field_name}", "{field_type}"],\n')
+    ffile.write('];\n\n')
+
+
+PY_FP_TYPES = {
+    'String': 'string',
+    'InetAddress': 'string',
+    'int': 'number',
+    'timestamp': 'number',
+    'byte': 'number',
+    'byte[]': 'Buffer',
+    'boolean': 'boolean'
+}
+
+
+def generate_fingerprint_function(schema: Any, name: str, version: int, ffile: TextIO) -> None:
+    params = []
+    keys = ''
+    object_type = ''
+    for field in schema['fingerprint']:
+        field_name = field['field']
+        if field_name != 'object_type':
+            if 'type' in field:
+                field_type = PY_FP_TYPES[field['type']]
+            else:
+                field_type = 'Buffer'
+            if field.get('array', False):
+                field_type = f'{field_type}[]'
+            params.append(f'{field_name}: {field_type} | null')
+            keys += f', {field_name}'
+        else:
+            value = field['comment'].removeprefix('<code>').removesuffix('</code>')
+            object_type = f", 'object_type': '{value}'"
+    ffile.write(params_wrap(f'export function create{name}Fingerprint{version}(%s): Buffer {{\n', ', '.join(params), 1))
+    schema_name = to_snake(name).upper()
+    call_params = f'{{"version": {version}{object_type}{keys}}}, {schema_name}_FINGERPRINT{version}_SCHEMA'
+    ffile.write(params_wrap(f'{ind(1)}return fingerprintBytes(%s);\n', call_params, 2))
+    ffile.write('}\n')
+
+
+def generate_fingerprint(schema: Any, name: str, version: int, ffile: TextIO) -> None:
+    generate_fingerprint_schema(schema, name, version, ffile)
+    generate_fingerprint_function(schema, name, version, ffile)
+
+
+PREAMBLE_FINGERPRINTS = '''// This file is generated
+
+import { FingerprintSchema } from "../crypto/fingerprint";
+import { fingerprintBytes } from "../crypto/crypto";
+'''
+
+
+def generate_fingerprints(fp: Any, outdir: str) -> None:
+    with open(outdir + '/node/fingerprints.ts', 'w+') as ffile:
+        ffile.write(PREAMBLE_FINGERPRINTS)
+        for object in fp['objects']:
+            name = object['name']
+            for schema in object['versions']:
+                version = schema['version']
+                generate_fingerprint(schema, name, version, ffile)
+
+
 def generate_code(outdir: str) -> None:
     node_api = read_api(sys.argv[1])
+    fp = read_api(sys.argv[2])
     generate_types(node_api, outdir)
+    generate_fingerprints(fp, outdir)
 
 
-if len(sys.argv) < 2 or sys.argv[1] == '':
-    print("Usage: nodejs-moera-api <node_api.yml file path> <output directory>")
+if len(sys.argv) < 3 or sys.argv[1] == '':
+    print("Usage: nodejs-moera-api <node_api.yml file path> <node_api_fingerprints.yml file path> <output directory>")
     exit(1)
 
-outdir = sys.argv[2] if len(sys.argv) >= 3 else '.'
+outdir = sys.argv[3] if len(sys.argv) >= 4 else '.'
 generate_code(outdir)
