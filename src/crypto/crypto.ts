@@ -62,11 +62,11 @@ export async function mnemonicToPrivateKey(mnemonic: string): Promise<crypto.Key
  * @return {Buffer} the raw public key
  */
 export function rawPublicKey(publicKey: crypto.KeyObject): Buffer {
-    const raw = Buffer.alloc(64);
     const jwk = publicKey.export({format: "jwk"});
-    Buffer.from(jwk.x ?? EMPTY_KEY, "base64url").copy(raw, 0);
-    Buffer.from(jwk.y ?? EMPTY_KEY, "base64url").copy(raw, 32);
-    return raw;
+    return Buffer.concat([
+        Buffer.from(jwk.x ?? EMPTY_KEY, "base64url"),
+        Buffer.from(jwk.y ?? EMPTY_KEY, "base64url")
+    ]);
 }
 
 /**
