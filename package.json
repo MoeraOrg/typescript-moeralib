@@ -1,6 +1,6 @@
 {
   "name": "moeralib",
-  "version": "0.15.4",
+  "version": "0.15.5",
   "description": "Library to interact with Moera decentralized social network",
   "repository": {
     "type": "git",
@@ -22,6 +22,7 @@
   },
   "types": "./typings/index.d.ts",
   "dependencies": {
+    "@scure/bip39": "^1.3.0",
     "ajv": "^8.16.0",
     "ajv-formats": "^3.0.1",
     "change-case": "^5.4.4",
