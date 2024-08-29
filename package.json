@@ -50,6 +50,10 @@
       "types": "./typings/naming/types.d.ts",
       "default": "./lib/naming/types.js"
     },
+    "./naming/fingerprints": {
+      "types": "./typings/naming/fingerprints.d.ts",
+      "default": "./lib/naming/fingerprints.js"
+    },
     "./node": {
       "types": "./typings/node/index.d.ts",
       "default": "./lib/node/index.js"
@@ -57,6 +61,10 @@
     "./node/types": {
       "types": "./typings/node/types.d.ts",
       "default": "./lib/node/types.js"
+    },
+    "./node/fingerprints": {
+      "types": "./typings/node/fingerprints.d.ts",
+      "default": "./lib/node/fingerprints.js"
     },
     "./universal-location": {
       "types": "./typings/universal-location.d.ts",
