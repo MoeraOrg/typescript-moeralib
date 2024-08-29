@@ -5,6 +5,7 @@ export {
     rawPrivateKey,
     rawPublicKey,
     rawToPrivateKey,
+    rawToPublicKey,
     digestFingerprint,
     signFingerprint,
     verifyFingerprintSignature
