@@ -196,6 +196,35 @@ export function createPostingFingerprint0(
     );
 }
 
+const PUSH_RELAY_MESSAGE_FINGERPRINT0_SCHEMA: FingerprintSchema = [
+    ["version", "number"],
+    ["objectType", "string"],
+    ["signedAt", "number"],
+];
+
+export function createPushRelayMessageFingerprint0(signedAt: number | null): Buffer {
+    return fingerprintBytes(
+        {"version": 0, "objectType": "PUSH_RELAY_MESSAGE", signedAt}, PUSH_RELAY_MESSAGE_FINGERPRINT0_SCHEMA
+    );
+}
+
+const PUSH_RELAY_REGISTER_FINGERPRINT0_SCHEMA: FingerprintSchema = [
+    ["version", "number"],
+    ["objectType", "string"],
+    ["clientId", "string"],
+    ["lang", "string"],
+    ["signedAt", "number"],
+];
+
+export function createPushRelayRegisterFingerprint0(
+    clientId: string | null, lang: string | null, signedAt: number | null
+): Buffer {
+    return fingerprintBytes(
+        {"version": 0, "objectType": "PUSH_RELAY_REGISTER", clientId, lang, signedAt},
+        PUSH_RELAY_REGISTER_FINGERPRINT0_SCHEMA
+    );
+}
+
 const REACTION_FINGERPRINT0_SCHEMA: FingerprintSchema = [
     ["version", "number"],
     ["objectType", "string"],
