@@ -65,6 +65,8 @@ export const SCOPE_VALUES: Record<Scope, number> = {
     "all": 0x3fffffff,
 };
 
+export type SearchEngine = "google";
+
 export type SettingType = "bool" | "int" | "string" | "json" | "Duration" | "PrivateKey" | "PublicKey" | "Timestamp"
     | "UUID" | "Principal";
 
@@ -76,7 +78,7 @@ export type SheriffOrderCategory = "visibility";
 export type SheriffOrderReason = "unlawful" | "defamatory" | "threat" | "spam" | "scam" | "malware" | "copyright"
     | "impersonating" | "privacy" | "other";
 
-export type SourceFormat = "plain-text" | "html" | "markdown" | "application";
+export type SourceFormat = "plain-text" | "html" | "markdown" | "html/visual" | "application";
 
 export type StoryType = "asked-to-friend" | "asked-to-subscribe" | "blocked-user" | "blocked-user-in-posting"
     | "comment-added" | "comment-media-reaction-added-negative" | "comment-media-reaction-added-positive"
@@ -86,7 +88,8 @@ export type StoryType = "asked-to-friend" | "asked-to-subscribe" | "blocked-user
     | "posting-added" | "posting-media-reaction-added-negative" | "posting-media-reaction-added-positive"
     | "posting-media-reaction-failed" | "posting-post-task-failed" | "posting-reaction-task-failed"
     | "posting-subscribe-task-failed" | "posting-update-task-failed" | "posting-updated" | "reaction-added-negative"
-    | "reaction-added-positive" | "remote-comment-added" | "reply-comment" | "sheriff-complaint-added"
+    | "reaction-added-positive" | "reminder-avatar" | "reminder-email" | "reminder-full-name" | "reminder-sheriff-allow"
+    | "remote-comment-added" | "reply-comment" | "search-report" | "sheriff-complaint-added"
     | "sheriff-complaint-decided" | "sheriff-marked" | "sheriff-unmarked" | "subscriber-added" | "subscriber-deleted"
     | "unblocked-user" | "unblocked-user-in-posting";
 
@@ -1186,6 +1189,13 @@ export interface GrantInfo {
     scope: Scope[];
 }
 
+export interface KeyMnemonic {
+    /**
+     * the words
+     */
+    mnemonic: string[];
+}
+
 export interface LinkPreview {
     /**
      * name of the site
@@ -1332,6 +1342,10 @@ export interface NodeNameInfo {
      * if the operation with the node name was failed, the human-readable description of the failure
      */
     operationErrorMessage?: string | null;
+    /**
+     * ``true``, if updating key mnemonic is being stored on the node, ``false`` otherwise
+     */
+    storedMnemonic?: boolean | null;
     /**
      * the supported operations and the corresponding principals
      */
@@ -2628,6 +2642,21 @@ export interface StorySummaryNode {
      * node owner's gender
      */
     ownerGender?: string | null;
+}
+
+export interface StorySummaryPageClicks {
+    /**
+     * page heading, ``null`` for the blog itself
+     */
+    heading?: string | null;
+    /**
+     * page URL
+     */
+    href: string;
+    /**
+     * number of clicks on the page
+     */
+    clicks: number;
 }
 
 export interface StorySummaryReaction {
@@ -4034,6 +4063,10 @@ export interface StorySummaryData {
      * additional descriptive text
      */
     description?: string | null;
+    /**
+     * list of pages with number of clicks on each of them
+     */
+    clicks?: StorySummaryPageClicks[] | null;
 }
 
 export interface CommentInfoBase<B> {

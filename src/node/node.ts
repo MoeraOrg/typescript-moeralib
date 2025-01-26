@@ -1354,6 +1354,43 @@ export class MoeraNode extends Caller {
     }
 
     /**
+     * Get the updating key mnemonic stored on the node.
+     *
+     * @return {Promise<API.KeyMnemonic>}
+     */
+    async getStoredMnemonic(): Promise<API.KeyMnemonic> {
+        const location = "/node-name/mnemonic";
+        return await this.call("getStoredMnemonic", location, {
+            method: "GET", schema: "KeyMnemonic"
+        }) as API.KeyMnemonic;
+    }
+
+    /**
+     * Store the updating key mnemonic on the node.
+     *
+     * @param {API.KeyMnemonic} mnemonic
+     * @return {Promise<API.Result>}
+     */
+    async storeMnemonic(mnemonic: API.KeyMnemonic): Promise<API.Result> {
+        const location = "/node-name/mnemonic";
+        return await this.call("storeMnemonic", location, {
+            method: "POST", body: mnemonic, schema: "Result"
+        }) as API.Result;
+    }
+
+    /**
+     * Delete the updating key mnemonic stored on the node.
+     *
+     * @return {Promise<API.Result>}
+     */
+    async deleteStoredMnemonic(): Promise<API.Result> {
+        const location = "/node-name/mnemonic";
+        return await this.call("deleteStoredMnemonic", location, {
+            method: "DELETE", schema: "Result"
+        }) as API.Result;
+    }
+
+    /**
      * Accept a notification packet from another node. Notification packets older than 10 minutes are ignored. The
      * sending node should update the packet timestamp and the signature and send the packet again. This mechanism
      * prevents attackers from recording and resending old signed packets.
@@ -2276,6 +2313,19 @@ export class MoeraNode extends Caller {
         return await this.call("updateStory", location, {
             method: "PUT", body: story, schema: "StoryInfo", bodies: true
         }) as API.StoryInfo;
+    }
+
+    /**
+     * Delete the story.
+     *
+     * @param {string} id - ID of the story
+     * @return {Promise<API.Result>}
+     */
+    async deleteStory(id: string): Promise<API.Result> {
+        const location = ut`/stories/${id}`;
+        return await this.call("deleteStory", location, {
+            method: "DELETE", schema: "Result"
+        }) as API.Result;
     }
 
     /**

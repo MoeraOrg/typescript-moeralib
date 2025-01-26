@@ -1196,6 +1196,22 @@ export const NODE_API_SCHEMAS = {
             }
         },
 
+        KeyMnemonic: {
+            type: "object",
+            properties: {
+                "mnemonic": {
+                    type: "array",
+                    items: {
+                        type: "string"
+                    }
+                },
+            },
+            required: [
+                "mnemonic",
+            ],
+            additionalProperties: false
+        },
+
         LinkPreview: {
             type: "object",
             properties: {
@@ -1300,6 +1316,10 @@ export const NODE_API_SCHEMAS = {
                 },
                 "operationErrorMessage": {
                     type: "string",
+                    nullable: true
+                },
+                "storedMnemonic": {
+                    type: "boolean",
                     nullable: true
                 },
                 "operations": {
@@ -2497,6 +2517,27 @@ export const NODE_API_SCHEMAS = {
                     nullable: true
                 },
             },
+            additionalProperties: false
+        },
+
+        StorySummaryPageClicks: {
+            type: "object",
+            properties: {
+                "heading": {
+                    type: "string",
+                    nullable: true
+                },
+                "href": {
+                    type: "string"
+                },
+                "clicks": {
+                    type: "integer"
+                },
+            },
+            required: [
+                "href",
+                "clicks",
+            ],
             additionalProperties: false
         },
 
@@ -4011,6 +4052,13 @@ export const NODE_API_SCHEMAS = {
                 },
                 "description": {
                     type: "string",
+                    nullable: true
+                },
+                "clicks": {
+                    type: "array",
+                    items: {
+                        $ref: "node#/definitions/StorySummaryPageClicks"
+                    },
                     nullable: true
                 },
             },
