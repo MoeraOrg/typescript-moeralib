@@ -93,7 +93,7 @@ export type StoryType = "asked-to-friend" | "asked-to-subscribe" | "blocked-user
     | "sheriff-complaint-decided" | "sheriff-marked" | "sheriff-unmarked" | "subscriber-added" | "subscriber-deleted"
     | "unblocked-user" | "unblocked-user-in-posting";
 
-export type SubscriptionReason = "user" | "mention" | "comment";
+export type SubscriptionReason = "user" | "mention" | "comment" | "auto";
 
 export type SubscriptionType = "feed" | "posting" | "posting-comments" | "profile" | "user-list";
 
@@ -144,6 +144,10 @@ export interface CommentOperations {
      * add a negative reaction to the comment
      */
     addNegativeReaction?: PrincipalValue | null;
+    /**
+     * override the permissions of the comment's reactions
+     */
+    overrideReaction?: PrincipalValue | null;
 }
 
 export interface ContactOperations {
@@ -1048,6 +1052,14 @@ export interface FeedWithStatus {
      * number of stories in the feed that have not been read yet
      */
     notRead: number;
+    /**
+     * moment of the oldest non-viewed story
+     */
+    notViewedMoment?: number | null;
+    /**
+     * moment of the oldest non-read story
+     */
+    notReadMoment?: number | null;
 }
 
 export interface FriendGroupAssignment {
@@ -3289,6 +3301,10 @@ export interface CommentSourceText {
      */
     operations?: CommentOperations | null;
     /**
+     * the operations and the corresponding principals that are overridden in reactions to the comment
+     */
+    reactionOperations?: ReactionOperations | null;
+    /**
      * the operations and the corresponding principals that are overridden by the posting's owner ("senior"); only the
      * senior may set this
      */
@@ -3841,6 +3857,14 @@ export interface PostingSourceText {
      * the operations and the corresponding principals that are overridden in the posting's comments
      */
     commentOperations?: CommentOperations | null;
+    /**
+     * the operations and the corresponding principals that are overridden in reactions to the posting
+     */
+    reactionOperations?: ReactionOperations | null;
+    /**
+     * the operations and the corresponding principals that are overridden in reactions to the posting's comments
+     */
+    commentReactionOperations?: ReactionOperations | null;
 }
 
 export interface PostingText {
@@ -3959,6 +3983,10 @@ export interface SettingDescriptor {
      * the setting is privileged - may be changed by server owner only
      */
     privileged?: boolean | null;
+    /**
+     * the setting is stored in the database in encrypted form
+     */
+    encrypted?: boolean | null;
     /**
      * human-friendly description of the setting
      */
