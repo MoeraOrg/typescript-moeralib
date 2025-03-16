@@ -274,6 +274,7 @@ export class Caller {
 
     /**
      * Set a source of cartes for authentication.
+     *
      * @param {CarteSource} carteSource
      */
     carteSource(carteSource: CarteSource): void {

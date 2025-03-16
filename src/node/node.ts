@@ -1178,7 +1178,7 @@ export class MoeraNode extends Caller {
     }
 
     /**
-     * Upload a new media file owned by the node admin. Content of the file is passed in the request body.
+     * Upload a new media file owned by the node admin. The content of the file is passed in the request body.
      *
      * @param {Buffer} body
      * @param {string} contentType - content-type of ``body``
@@ -1192,7 +1192,7 @@ export class MoeraNode extends Caller {
     }
 
     /**
-     * Upload a new media file owned by the given node. Content of the file is passed in the request body.
+     * Upload a new media file owned by the given node. The content of the file is passed in the request body.
      *
      * @param {string} clientName - name of the node owning the media file
      * @param {Buffer} body
@@ -1606,7 +1606,7 @@ export class MoeraNode extends Caller {
     /**
      * Get a slice of the list of reactions to the given posting, optionally filtered by reaction type, delimited by
      * ``before`` moment and the given ``limit``. If ``before`` is not provided, the latest reactions are returned. The
-     * node may decide to return less reactions than the given ``limit``. The reactions are always sorted by moment,
+     * node may decide to return fewer reactions than the given ``limit``. The reactions are always sorted by moment,
      * descending.
      *
      * @param {string} postingId - ID of the posting
@@ -2200,7 +2200,7 @@ export class MoeraNode extends Caller {
     /**
      * Get a slice of the list of groups of complaints, optionally filtered by status, delimited by the ``before`` or
      * ``after`` moment and the given ``limit``. If neither ``before`` nor ``after`` are provided, the latest groups
-     * are returned. The node may decide to return less groups than the given ``limit``. The groups are always sorted
+     * are returned. The node may decide to return fewer groups than the given ``limit``. The groups are always sorted
      * by moment, descending.
      *
      * @param {number | null} after - filter groups created strongly after this moment
