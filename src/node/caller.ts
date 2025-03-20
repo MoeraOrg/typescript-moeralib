@@ -71,9 +71,9 @@ export class MoeraNodeCallError extends Error {
 
 type Structure = Partial<Record<string, any>>;
 
-function encodeBody(decoded: Body | null, format: BodyFormat | SourceFormat | null): string | null {
-    if (decoded == null) {
-        return null;
+function encodeBody(decoded: Body | string | null, format: BodyFormat | SourceFormat | null): string | null {
+    if (decoded == null || typeof decoded === "string") {
+        return decoded;
     }
     if (format === "application") {
         return decoded.text ?? null;
@@ -90,7 +90,7 @@ function encodeBodies(data: Structure | Structure[]): Structure | Structure[] {
         encoded.body = encodeBody(data.body, data.bodyFormat);
     }
     if (data.bodyPreview != null) {
-        encoded.body = encodeBody(data.bodyPreview, data.bodyFormat);
+        encoded.bodyPreview = encodeBody(data.bodyPreview, data.bodyFormat);
     }
     if (data.bodySrc != null) {
         encoded.bodySrc = encodeBody(data.bodySrc, data.bodySrcFormat);
@@ -184,6 +184,22 @@ export function moeraRoot(url: string): string {
         url += "/moera";
     }
     return url;
+}
+
+const FETCH_TIMEOUT = 10000; // ms
+const UPDATE_TIMEOUT = 60000; // ms
+const LARGE_BODY_MIN = 65536;
+
+function abortSignal(method: string, body: string | Buffer | null): AbortSignal {
+    let signal: AbortSignal | null;
+    if (method === "POST" || method === "PUT") {
+        const largeBody = body != null && (typeof body === "string" ? body.length > LARGE_BODY_MIN : true);
+        signal = AbortSignal.timeout(largeBody ? UPDATE_TIMEOUT : FETCH_TIMEOUT);
+    } else {
+        signal = AbortSignal.timeout(FETCH_TIMEOUT);
+    }
+
+    return signal;
 }
 
 /**
@@ -348,12 +364,14 @@ export class Caller {
             srcBodies = false
         }: CallOptions
     ): Promise<any> {
-        let bodyEncoded: string | null = null;
-        if (body != null) {
+        let bodyEncoded: string | Buffer | null = null;
+        if (body != null && !Buffer.isBuffer(body)) {
             if (srcBodies) {
                 body = encodeBodies(body);
             }
             bodyEncoded = JSON.stringify(body);
+        } else {
+            bodyEncoded = body;
         }
 
         const headers: HeadersInit = {
@@ -394,10 +412,11 @@ export class Caller {
             throw new MoeraNodeCallError("Node URL is not set");
         }
 
-        let url = urlWithParameters(this.root + "/api" + location, params);
+        const url = urlWithParameters(this.root + "/api" + location, params);
+        const signal = abortSignal(method, bodyEncoded);
         let response;
         try {
-             response = await fetch(url, {method, headers, body: bodyEncoded});
+             response = await fetch(url, {method, headers, body: bodyEncoded, signal});
         } catch (e) {
             throw new MoeraNodeConnectionError(String(e));
         }
