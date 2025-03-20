@@ -332,7 +332,7 @@ export class MoeraNode extends Caller {
     async createComment(postingId: string, comment: API.CommentText): Promise<API.CommentCreated> {
         const location = ut`/postings/${postingId}/comments`;
         return await this.call("createComment", location, {
-            method: "POST", body: comment, schema: "CommentCreated", bodies: true
+            method: "POST", body: comment, schema: "CommentCreated", bodies: true, srcBodies: true
         }) as API.CommentCreated;
     }
 
@@ -378,7 +378,7 @@ export class MoeraNode extends Caller {
     async updateComment(postingId: string, commentId: string, comment: API.CommentText): Promise<API.CommentInfo> {
         const location = ut`/postings/${postingId}/comments/${commentId}`;
         return await this.call("updateComment", location, {
-            method: "PUT", body: comment, schema: "CommentInfo", bodies: true
+            method: "PUT", body: comment, schema: "CommentInfo", bodies: true, srcBodies: true
         }) as API.CommentInfo;
     }
 
@@ -864,7 +864,7 @@ export class MoeraNode extends Caller {
     async createDraft(draft: API.DraftText): Promise<API.DraftInfo> {
         const location = "/drafts";
         return await this.call("createDraft", location, {
-            method: "POST", body: draft, schema: "DraftInfo", bodies: true
+            method: "POST", body: draft, schema: "DraftInfo", bodies: true, srcBodies: true
         }) as API.DraftInfo;
     }
 
@@ -891,7 +891,7 @@ export class MoeraNode extends Caller {
     async updateDraft(id: string, draft: API.DraftText): Promise<API.DraftInfo> {
         const location = ut`/drafts/${id}`;
         return await this.call("updateDraft", location, {
-            method: "PUT", body: draft, schema: "DraftInfo", bodies: true
+            method: "PUT", body: draft, schema: "DraftInfo", bodies: true, srcBodies: true
         }) as API.DraftInfo;
     }
 
@@ -1481,7 +1481,7 @@ export class MoeraNode extends Caller {
     async createPosting(posting: API.PostingText): Promise<API.PostingInfo> {
         const location = "/postings";
         return await this.call("createPosting", location, {
-            method: "POST", body: posting, schema: "PostingInfo", bodies: true
+            method: "POST", body: posting, schema: "PostingInfo", bodies: true, srcBodies: true
         }) as API.PostingInfo;
     }
 
@@ -1495,7 +1495,7 @@ export class MoeraNode extends Caller {
     async updatePosting(id: string, posting: API.PostingText): Promise<API.PostingInfo> {
         const location = ut`/postings/${id}`;
         return await this.call("updatePosting", location, {
-            method: "PUT", body: posting, schema: "PostingInfo", bodies: true
+            method: "PUT", body: posting, schema: "PostingInfo", bodies: true, srcBodies: true
         }) as API.PostingInfo;
     }
 
@@ -1862,7 +1862,7 @@ export class MoeraNode extends Caller {
     ): Promise<API.Result> {
         const location = ut`/nodes/${remoteNodeName}/postings/${postingId}/comments`;
         return await this.call("createRemoteComment", location, {
-            method: "POST", body: comment, schema: "Result"
+            method: "POST", body: comment, schema: "Result", srcBodies: true
         }) as API.Result;
     }
 
@@ -1880,7 +1880,7 @@ export class MoeraNode extends Caller {
     ): Promise<API.Result> {
         const location = ut`/nodes/${remoteNodeName}/postings/${postingId}/comments/${commentId}`;
         return await this.call("updateRemoteComment", location, {
-            method: "PUT", body: comment, schema: "Result"
+            method: "PUT", body: comment, schema: "Result", srcBodies: true
         }) as API.Result;
     }
 
@@ -1979,7 +1979,7 @@ export class MoeraNode extends Caller {
     async createRemotePosting(remoteNodeName: string, posting: API.PostingSourceText): Promise<API.Result> {
         const location = ut`/nodes/${remoteNodeName}/postings`;
         return await this.call("createRemotePosting", location, {
-            method: "POST", body: posting, schema: "Result"
+            method: "POST", body: posting, schema: "Result", srcBodies: true
         }) as API.Result;
     }
 
@@ -1996,7 +1996,7 @@ export class MoeraNode extends Caller {
     ): Promise<API.Result> {
         const location = ut`/nodes/${remoteNodeName}/postings/${postingId}`;
         return await this.call("updateRemotePosting", location, {
-            method: "PUT", body: posting, schema: "Result"
+            method: "PUT", body: posting, schema: "Result", srcBodies: true
         }) as API.Result;
     }
 

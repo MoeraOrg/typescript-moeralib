@@ -3278,7 +3278,7 @@ export interface CommentSourceText {
     /**
      * the source text of the comment, a string representation of a JSON structure
      */
-    bodySrc?: string | null;
+    bodySrc?: Body | string | null;
     /**
      * format of the source text of the comment, ``plain-text`` by default; the list of available formats is returned
      * in ``PostingFeatures``
@@ -3331,11 +3331,11 @@ export interface CommentText {
     /**
      * preview of the comment's body, a string representation of a JSON structure
      */
-    bodyPreview?: string | null;
+    bodyPreview?: Body | string | null;
     /**
      * the source text of the comment, a string representation of a JSON structure
      */
-    bodySrc?: string | null;
+    bodySrc?: Body | string | null;
     /**
      * format of the source text of the comment, ``plain-text`` by default; the list of available formats is returned
      * in ``PostingFeatures``
@@ -3344,7 +3344,7 @@ export interface CommentText {
     /**
      * body of the comment, a string representation of a JSON structure
      */
-    body?: string | null;
+    body?: Body | string | null;
     /**
      * format of the body of the comment, may have any value meaningful for the client
      */
@@ -3424,7 +3424,7 @@ export interface DraftText {
     /**
      * the source text of the draft, a string representation of a JSON structure
      */
-    bodySrc?: string | null;
+    bodySrc?: Body | string | null;
     /**
      * format of the source text of the draft, ``plain-text`` by default; the list of available formats is returned in
      * ``PostingFeatures``
@@ -3835,7 +3835,7 @@ export interface PostingSourceText {
     /**
      * the source text of the posting, a string representation of a JSON structure
      */
-    bodySrc?: string | null;
+    bodySrc?: Body | string | null;
     /**
      * format of the source text of the posting, ``plain-text`` by default; the list of available formats is returned
      * in ``PostingFeatures``
@@ -3887,11 +3887,11 @@ export interface PostingText {
     /**
      * preview of the posting's body, a string representation of a JSON structure
      */
-    bodyPreview?: string | null;
+    bodyPreview?: Body | string | null;
     /**
      * the source text of the posting, a string representation of a JSON structure
      */
-    bodySrc?: string | null;
+    bodySrc?: Body | string | null;
     /**
      * format of the source text of the posting, ``plain-text`` by default; the list of available formats is returned
      * in ``PostingFeatures``
@@ -3900,7 +3900,7 @@ export interface PostingText {
     /**
      * body of the posting, a string representation of a JSON structure
      */
-    body?: string | null;
+    body?: Body | string | null;
     /**
      * format of the body of the posting, may have any value meaningful for the client
      */

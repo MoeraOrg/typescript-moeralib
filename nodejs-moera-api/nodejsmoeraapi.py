@@ -336,7 +336,7 @@ class Structure(Interface):
                 tmpl = '    %s: %s;\n'
             if 'struct' in field:
                 if field['struct'] == 'Body':
-                    t = 'B' if self.generic else 'string'
+                    t = 'B' if self.generic else 'Body | string'
                 else:
                     t = field['struct']
                     if self.generic and field['struct'] in structs and structs[field['struct']].generic:
@@ -513,6 +513,7 @@ def generate_calls(api: Any, structs: dict[str, Structure], afile: TextIO) -> No
                         params.append(f'{js_name}: {js_type}')
                         param_docs += [(js_name, param.get('description', ''), js_type)]
             body = ''
+            in_body = False
             if 'in' in request:
                 if 'type' in request['in']:
                     if request['in']['type'] != 'blob':
@@ -528,7 +529,10 @@ def generate_calls(api: Any, structs: dict[str, Structure], afile: TextIO) -> No
                               .format(method=request['type'], url=request['url']))
                         exit(1)
                     name = request['in']['name']
-                    js_type = 'API.' + request['in']['struct']
+                    struct = request['in']['struct']
+                    if struct in structs and structs[struct].uses_body:
+                        in_body = True
+                    js_type = f'API.{struct}'
                     if request['in'].get('array', False):
                         js_type += '[]'
                     body = f', body: {name}'
@@ -603,10 +607,12 @@ def generate_calls(api: Any, structs: dict[str, Structure], afile: TextIO) -> No
                 afile.write(f'{ind(2)}const params = {{{", ".join(subs)}}};\n')
                 query_params = ', params'
             afile.write(f'{ind(2)}return await this.call("{name}", location, {{\n')
-            decode_bodies = ''
+            bodies = ''
             if result_body:
-                decode_bodies = ', bodies: true'
-            call_params = f'{ind(3)}method: "{method}"{query_params}{body}, schema: "{result_schema}"{decode_bodies}\n'
+                bodies += ', bodies: true'
+            if in_body:
+                bodies += ', srcBodies: true'
+            call_params = f'{ind(3)}method: "{method}"{query_params}{body}, schema: "{result_schema}"{bodies}\n'
             afile.write(comma_wrap(call_params, 2))
             afile.write(f'{ind(2)}}}) as {result};\n')
             afile.write(f'{ind(1)}}}\n')
