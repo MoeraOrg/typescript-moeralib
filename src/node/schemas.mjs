@@ -717,7 +717,7 @@ export const NODE_API_SCHEMAS = {
                         }
                     ]
                 },
-                "closeness": {
+                "distance": {
                     type: "number"
                 },
                 "hasFeedSubscriber": {
@@ -783,7 +783,7 @@ export const NODE_API_SCHEMAS = {
             },
             required: [
                 "nodeName",
-                "closeness",
+                "distance",
             ],
             additionalProperties: false
         },
@@ -2071,6 +2071,50 @@ export const NODE_API_SCHEMAS = {
                 "sheriffName",
             ],
             additionalProperties: false
+        },
+
+        SearchNodeInfo: {
+            type: "object",
+            properties: {
+                "nodeName": {
+                    type: "string"
+                },
+                "fullName": {
+                    type: "string",
+                    nullable: true
+                },
+                "title": {
+                    type: "string",
+                    nullable: true
+                },
+                "avatar": {
+                    anyOf: [
+                        {
+                            $ref: "node#/definitions/AvatarImage",
+                            type: "object",
+                            nullable: true
+                        },
+                        {
+                            type: "null"
+                        }
+                    ]
+                },
+                "distance": {
+                    type: "number"
+                },
+            },
+            required: [
+                "nodeName",
+                "distance",
+            ],
+            additionalProperties: false
+        },
+
+        SearchNodeInfoArray: {
+            type: "array",
+            items: {
+                $ref: "node#/definitions/SearchNodeInfo"
+            }
         },
 
         SettingInfo: {

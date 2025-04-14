@@ -571,8 +571,8 @@ export class MoeraNode extends Caller {
      * \
      * The node may decide to return fewer contacts than the given ``limit``. \
      * \
-     * The contacts are sorted by their *closeness* to the node, which is calculated from the number of reactions and
-     * comments and their age.
+     * The contacts are sorted by *social distance* from the node, which depends on their subscription and friendship
+     * status and the number of recent reactions and comments.
      *
      * @param {string | null} query - the search query
      * @param {number | null} limit - maximum number of contacts returned
@@ -2121,6 +2121,28 @@ export class MoeraNode extends Caller {
         return await this.call("getRemoteSheriffOrder", location, {
             method: "GET", schema: "SheriffOrderInfo"
         }) as API.SheriffOrderInfo;
+    }
+
+    /**
+     * Search for Moera nodes matching the search ``query``. Every space-delimited word in the query must match
+     * case-insensitively a beginning of the node's name or a beginning of any non-letter-delimited word in the node's
+     * full name. The order of words is not significant. \
+     * \
+     * The search engine may decide to return fewer nodes than the given ``limit``. \
+     * \
+     * The returned nodes are sorted by their relevance. The exact definition of this term is left to the search
+     * engine's implementation.
+     *
+     * @param {string | null} query - the search query
+     * @param {number | null} limit - maximum number of nodes returned
+     * @return {Promise<API.SearchNodeInfo[]>}
+     */
+    async searchNodes(query: string | null = null, limit: number | null = null): Promise<API.SearchNodeInfo[]> {
+        const location = ut`/search/nodes`;
+        const params = {query, limit};
+        return await this.call("searchNodes", location, {
+            method: "GET", params, schema: "SearchNodeInfoArray"
+        }) as API.SearchNodeInfo[];
     }
 
     /**

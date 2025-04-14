@@ -65,6 +65,9 @@ export const SCOPE_VALUES: Record<Scope, number> = {
     "all": 0x3fffffff,
 };
 
+export type SearchContentUpdateType = "block" | "friend" | "profile" | "subscribe" | "unblock" | "unfriend"
+    | "unsubscribe";
+
 export type SearchEngine = "google";
 
 export type SettingType = "bool" | "int" | "string" | "json" | "Duration" | "PrivateKey" | "PublicKey" | "Timestamp"
@@ -95,7 +98,7 @@ export type StoryType = "asked-to-friend" | "asked-to-subscribe" | "blocked-user
 
 export type SubscriptionReason = "user" | "mention" | "comment" | "auto";
 
-export type SubscriptionType = "feed" | "posting" | "posting-comments" | "profile" | "user-list";
+export type SubscriptionType = "feed" | "posting" | "posting-comments" | "profile" | "search" | "user-list";
 
 export type VerificationStatus = "running" | "correct" | "incorrect" | "error";
 
@@ -848,10 +851,10 @@ export interface ContactInfo {
     gender?: string | null;
     avatar?: AvatarImage | null;
     /**
-     * closeness of the contact to the node, which is calculated from the number of reactions and comments and their
-     * age
+     * social distance between the contact and the node, which depends on subscription and friendship status and the
+     * number recent reactions and comments
      */
-    closeness: number;
+    distance: number;
     /**
      * the contact is subscribed to at least one of the node's feeds
      */
@@ -2071,6 +2074,40 @@ export interface SheriffMark {
      * name of the sheriff that added the mark
      */
     sheriffName: string;
+}
+
+export interface SearchNodeInfo {
+    nodeName: string;
+    /**
+     * node owner's full name
+     */
+    fullName?: string | null;
+    /**
+     * node title
+     */
+    title?: string | null;
+    /**
+     * node owner's avatar
+     */
+    avatar?: AvatarImage | null;
+    /**
+     * social distance between the node and the client
+     */
+    distance: number;
+}
+
+export interface SearchBlockUpdate {
+    nodeName: string;
+    blockedOperation: BlockedOperation;
+}
+
+export interface SearchFriendUpdate {
+    nodeName: string;
+}
+
+export interface SearchSubscriptionUpdate {
+    nodeName: string;
+    feedName: string;
 }
 
 export interface SettingInfo {
