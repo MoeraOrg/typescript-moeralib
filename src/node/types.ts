@@ -65,10 +65,13 @@ export const SCOPE_VALUES: Record<Scope, number> = {
     "all": 0x3fffffff,
 };
 
-export type SearchContentUpdateType = "block" | "friend" | "profile" | "subscribe" | "unblock" | "unfriend"
-    | "unsubscribe";
+export type SearchContentUpdateType = "block" | "comment-add" | "comment-update" | "comment-delete" | "friend"
+    | "profile" | "posting-add" | "posting-update" | "posting-delete" | "reaction-add" | "reaction-delete"
+    | "reactions-delete-all" | "subscribe" | "unblock" | "unfriend" | "unsubscribe";
 
 export type SearchEngine = "google";
+
+export type SearchEntryType = "all" | "posting" | "comment";
 
 export type SettingType = "bool" | "int" | "string" | "json" | "Duration" | "PrivateKey" | "PublicKey" | "Timestamp"
     | "UUID" | "Principal";
@@ -345,6 +348,13 @@ export interface ReactionOperations {
      * delete the reaction
      */
     delete?: PrincipalValue | null;
+}
+
+export interface SearchEntryOperations {
+    /**
+     * view the entry
+     */
+    view?: PrincipalValue | null;
 }
 
 export interface StoryOperations {
@@ -2076,6 +2086,87 @@ export interface SheriffMark {
     sheriffName: string;
 }
 
+export interface SearchBlockUpdate {
+    /**
+     * name of the node being blocked/unblocked
+     */
+    nodeName: string;
+    /**
+     * the operation being blocked/unblocked
+     */
+    blockedOperation: BlockedOperation;
+}
+
+export interface SearchCommentUpdate {
+    /**
+     * ID of the posting the comment belongs to
+     */
+    postingId: string;
+    /**
+     * ID of the comment
+     */
+    commentId: string;
+}
+
+export interface SearchFriendUpdate {
+    /**
+     * name of the node being added/removed from the list of friends
+     */
+    nodeName: string;
+}
+
+export interface SearchHashtagFilter {
+    /**
+     * type of entries to be searched for; if omitted, all types of entries are returned
+     */
+    entryType?: SearchEntryType | null;
+    /**
+     * hashtags to be searched for; at least one of these hashtags should be present in the entry returned
+     */
+    hashtags: string[];
+    /**
+     * name of the node where the entries are published
+     */
+    publisherName?: string | null;
+    /**
+     * if ``true``, return the entries appearing in the Newsfeed of the ``publisherName`` node
+     */
+    inNewsfeed?: boolean | null;
+    /**
+     * return only the entries owned (authored) by one of these nodes
+     */
+    owners?: string[] | null;
+    /**
+     * return only the entries containing at least the given number of images
+     */
+    minImageCount?: number | null;
+    /**
+     * return only the entries containing not more than the given number of images
+     */
+    maxImageCount?: number | null;
+    /**
+     * if ``true``, return only the entries containing a video, if ``false``, return only the entries that do not
+     * contain a video
+     */
+    videoPresent?: boolean | null;
+    /**
+     * filter out entries prohibited by the given sheriff
+     */
+    sheriffName?: string | null;
+    /**
+     * return entries created strongly after this moment
+     */
+    after?: number | null;
+    /**
+     * return entries created at or before this moment
+     */
+    before?: number | null;
+    /**
+     * maximum number of entries returned
+     */
+    limit?: number | null;
+}
+
 export interface SearchNodeInfo {
     nodeName: string;
     /**
@@ -2096,18 +2187,144 @@ export interface SearchNodeInfo {
     distance: number;
 }
 
-export interface SearchBlockUpdate {
+export interface SearchPostingUpdate {
+    /**
+     * name of the feed where the posting is published
+     */
+    feedName: string;
+    /**
+     * ID of the story where the posting is published
+     */
+    storyId: string;
+    /**
+     * story publication timestamp - the time the story is published under in the feed
+     */
+    publishedAt: number;
+    /**
+     * name of the node where the posting is originated from
+     */
     nodeName: string;
-    blockedOperation: BlockedOperation;
+    /**
+     * ID of the posting on the original node
+     */
+    postingId: string;
 }
 
-export interface SearchFriendUpdate {
-    nodeName: string;
+export interface SearchReactionUpdate {
+    /**
+     * ID of the posting
+     */
+    postingId: string;
+    /**
+     * ID of the comment
+     */
+    commentId: string;
+    /**
+     * reaction owner's name
+     */
+    ownerName: string;
+}
+
+export interface SearchRepliedTo {
+    /**
+     * ID of the comment
+     */
+    id: string;
+    /**
+     * ID of the comment revision
+     */
+    revisionId?: string | null;
+    /**
+     * node name of the comment's owner
+     */
+    name: string;
+    /**
+     * full name of the comment's owner
+     */
+    fullName?: string | null;
+    /**
+     * avatar of the comment's owner
+     */
+    avatar?: AvatarImage | null;
+    /**
+     * heading of the comment
+     */
+    heading?: string | null;
 }
 
 export interface SearchSubscriptionUpdate {
+    /**
+     * name of the node being subscribed to/unsubscribed from
+     */
     nodeName: string;
+    /**
+     * name of the feed on the remote node being subscribed to/unsubscribed from
+     */
     feedName: string;
+}
+
+export interface SearchTextFilter {
+    /**
+     * type of entries to be searched for; if omitted, all types of entries are returned
+     */
+    entryType?: SearchEntryType | null;
+    /**
+     * the text to be searched for
+     */
+    text: string;
+    /**
+     * at least one of these hashtags should be present in the entry returned
+     */
+    hashtags?: string[] | null;
+    /**
+     * name of the node where the entries are published
+     */
+    publisherName?: string | null;
+    /**
+     * if ``true``, return the entries appearing in the Newsfeed of the ``publisherName`` node
+     */
+    inNewsfeed?: boolean | null;
+    /**
+     * return only the entries owned (authored) by one of these nodes
+     */
+    owners?: string[] | null;
+    /**
+     * return only the comments that are replies to comments owned (authored) by one of these nodes
+     */
+    repliedTo?: string[] | null;
+    /**
+     * return only the entries containing at least the given number of images
+     */
+    minImageCount?: number | null;
+    /**
+     * return only the entries containing not more than the given number of images
+     */
+    maxImageCount?: number | null;
+    /**
+     * if ``true``, return only the entries containing a video, if ``false``, return only the entries that do not
+     * contain a video
+     */
+    videoPresent?: boolean | null;
+    /**
+     * return entries created at or after this timestamp
+     */
+    createdAfter?: number | null;
+    /**
+     * return entries created at or before this timestamp
+     */
+    createdBefore?: number | null;
+    /**
+     * filter out entries prohibited by the given sheriff
+     */
+    sheriffName?: string | null;
+    /**
+     * page number, 0 by default
+     */
+    page?: number | null;
+    /**
+     * page size (maximum number of entries returned), the default is set by the search engine
+     */
+    limit?: number | null;
 }
 
 export interface SettingInfo {
@@ -2589,6 +2806,10 @@ export interface SheriffOrderInfo {
      */
     createdAt: number;
     /**
+     * moment of the order
+     */
+    moment: number;
+    /**
      * the sheriff's signature (use ``SheriffOrder`` fingerprint)
      */
     signature: string;
@@ -2600,6 +2821,33 @@ export interface SheriffOrderInfo {
      * ID of the groups of complaints that were the cause of the order
      */
     complaintGroupId?: string | null;
+}
+
+export interface SheriffOrdersSliceInfo {
+    /**
+     * the slice contains all orders before this moment, inclusive. May be the far future.
+     */
+    before: number;
+    /**
+     * the slice contains all orders after this moment, exclusive. May be the far past.
+     */
+    after: number;
+    /**
+     * the orders
+     */
+    orders: SheriffOrderInfo[];
+    /**
+     * total number of orders
+     */
+    total: number;
+    /**
+     * number of orders before this slice till the far past
+     */
+    totalInPast: number;
+    /**
+     * number of orders after this slice till the far future
+     */
+    totalInFuture: number;
 }
 
 export interface StoryAttributes {
@@ -3998,6 +4246,104 @@ export interface ReactionCreated {
      */
     totals: ReactionTotalsInfo;
 }
+
+export interface SearchEntryInfoBase<B> {
+    /**
+     * source node of the entry
+     */
+    nodeName: string;
+    /**
+     * for posting, ID of the posting; for comment, ID of the posting the comment belongs to
+     */
+    postingId: string;
+    /**
+     * ID of the comment
+     */
+    commentId?: string | null;
+    /**
+     * node name of the entry's owner
+     */
+    ownerName: string;
+    /**
+     * full name of the entry's owner
+     */
+    ownerFullName?: string | null;
+    /**
+     * avatar of the entry's owner
+     */
+    ownerAvatar?: AvatarImage | null;
+    /**
+     * preview of the entry's body, a string representation of a JSON structure
+     */
+    bodyPreview: B;
+    /**
+     * heading of the entry
+     */
+    heading: string;
+    /**
+     * number of images the entry contains
+     */
+    imageCount?: number | null;
+    /**
+     * if ``true``, the entry contains a video
+     */
+    videoPresent?: boolean | null;
+    /**
+     * information about the comment this comment is replying to
+     */
+    repliedTo?: SearchRepliedTo | null;
+    /**
+     * entry creation timestamp - the real time when the entry was created
+     */
+    createdAt: number;
+    /**
+     * the supported operations and the corresponding principals
+     */
+    operations?: SearchEntryOperations | null;
+    /**
+     * moment of the entry
+     */
+    moment: number;
+}
+
+export type EncodedSearchEntryInfo = SearchEntryInfoBase<string>;
+export type SearchEntryInfo = SearchEntryInfoBase<Body>;
+
+export interface SearchHashtagSliceInfoBase<B> {
+    /**
+     * the slice contains all entries before this moment, inclusive. May be the far future.
+     */
+    before: number;
+    /**
+     * the slice contains all entries after this moment, exclusive. May be the far past.
+     */
+    after: number;
+    /**
+     * the entries
+     */
+    entries: SearchEntryInfoBase<B>[];
+}
+
+export type EncodedSearchHashtagSliceInfo = SearchHashtagSliceInfoBase<string>;
+export type SearchHashtagSliceInfo = SearchHashtagSliceInfoBase<Body>;
+
+export interface SearchTextPageInfoBase<B> {
+    /**
+     * number of the page
+     */
+    page: number;
+    /**
+     * total number of pages
+     */
+    total: number;
+    /**
+     * the entries
+     */
+    entries: SearchEntryInfoBase<B>[];
+}
+
+export type EncodedSearchTextPageInfo = SearchTextPageInfoBase<string>;
+export type SearchTextPageInfo = SearchTextPageInfoBase<Body>;
 
 export interface SettingDescriptor {
     /**

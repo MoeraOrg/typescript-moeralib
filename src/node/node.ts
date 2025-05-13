@@ -33,6 +33,26 @@ export class MoeraNode extends Caller {
     }
 
     /**
+     * Get a slice of the list of all orders sent by the sheriff, delimited by the ``before`` or ``after`` moment and
+     * the given ``limit``. If neither ``before`` nor ``after`` are provided, the latest orders are returned. The node
+     * may decide to return fewer orders than the given ``limit``. The orders are always sorted by moment, descending.
+     *
+     * @param {number | null} after - filter orders posted strongly after this moment
+     * @param {number | null} before - filter orders posted at or before this moment
+     * @param {number | null} limit - maximum number of orders returned
+     * @return {Promise<API.SheriffOrdersSliceInfo>}
+     */
+    async getRemoteSheriffOrdersSlice(
+        after: number | null = null, before: number | null = null, limit: number | null = null
+    ): Promise<API.SheriffOrdersSliceInfo> {
+        const location = ut`/activity/sheriff/orders`;
+        const params = {after, before, limit};
+        return await this.call("getRemoteSheriffOrdersSlice", location, {
+            method: "GET", params, schema: "SheriffOrdersSliceInfo"
+        }) as API.SheriffOrdersSliceInfo;
+    }
+
+    /**
      * Get the status of the asynchronous operation that performs verification of a remote posting signature.
      *
      * @param {string} id - asynchronous operation ID
@@ -2143,6 +2163,43 @@ export class MoeraNode extends Caller {
         return await this.call("searchNodes", location, {
             method: "GET", params, schema: "SearchNodeInfoArray"
         }) as API.SearchNodeInfo[];
+    }
+
+    /**
+     * Search for postings and comments containing the specified hashtag(s) and optionally filtered by other criteria.
+     * \
+     * \
+     * The search engine may decide to return fewer nodes than the given ``limit``. \
+     * \
+     * The returned entries are sorted by moment in descending order.
+     *
+     * @param {API.SearchHashtagFilter} filter
+     * @return {Promise<API.SearchHashtagSliceInfo>}
+     */
+    async searchEntriesByHashtag(filter: API.SearchHashtagFilter): Promise<API.SearchHashtagSliceInfo> {
+        const location = "/search/entries/by-hashtag";
+        return await this.call("searchEntriesByHashtag", location, {
+            method: "POST", body: filter, schema: "SearchHashtagSliceInfo", bodies: true
+        }) as API.SearchHashtagSliceInfo;
+    }
+
+    /**
+     * Search for postings and comments containing the specified words or text fragment, and optionally filtered by
+     * other criteria. \
+     * \
+     * The search engine may decide to return fewer nodes than the given ``limit``. \
+     * \
+     * The returned entries are sorted by their relevance. The exact definition of this term is left to the search
+     * engine's implementation.
+     *
+     * @param {API.SearchTextFilter} filter
+     * @return {Promise<API.SearchTextPageInfo>}
+     */
+    async searchEntriesByText(filter: API.SearchTextFilter): Promise<API.SearchTextPageInfo> {
+        const location = "/search/entries/by-text";
+        return await this.call("searchEntriesByText", location, {
+            method: "POST", body: filter, schema: "SearchTextPageInfo", bodies: true
+        }) as API.SearchTextPageInfo;
     }
 
     /**
