@@ -2128,6 +2128,30 @@ export const NODE_API_SCHEMAS = {
             }
         },
 
+        SearchNodePageInfo: {
+            type: "object",
+            properties: {
+                "page": {
+                    type: "integer"
+                },
+                "total": {
+                    type: "integer"
+                },
+                "nodes": {
+                    type: "array",
+                    items: {
+                        $ref: "node#/definitions/SearchNodeInfo"
+                    }
+                },
+            },
+            required: [
+                "page",
+                "total",
+                "nodes",
+            ],
+            additionalProperties: false
+        },
+
         SearchRepliedTo: {
             type: "object",
             properties: {
@@ -4043,6 +4067,10 @@ export const NODE_API_SCHEMAS = {
                 },
                 "bodyPreview": {
                     type: "string"
+                },
+                "bodyFormat": {
+                    type: "string",
+                    nullable: true
                 },
                 "heading": {
                     type: "string"

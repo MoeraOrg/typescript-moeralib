@@ -2167,6 +2167,25 @@ export interface SearchHashtagFilter {
     limit?: number | null;
 }
 
+export interface SearchNodeFilter {
+    /**
+     * the search query
+     */
+    query: string;
+    /**
+     * filter out nodes prohibited by the given sheriff
+     */
+    sheriffName?: string | null;
+    /**
+     * page number, 0 by default
+     */
+    page?: number | null;
+    /**
+     * page size (maximum number of entries returned), the default is set by the search engine
+     */
+    limit?: number | null;
+}
+
 export interface SearchNodeInfo {
     nodeName: string;
     /**
@@ -2185,6 +2204,21 @@ export interface SearchNodeInfo {
      * social distance between the node and the client
      */
     distance: number;
+}
+
+export interface SearchNodePageInfo {
+    /**
+     * number of the page
+     */
+    page: number;
+    /**
+     * total number of nodes found (this number may be approximate)
+     */
+    total: number;
+    /**
+     * the nodes
+     */
+    nodes: SearchNodeInfo[];
 }
 
 export interface SearchPostingUpdate {
@@ -4277,6 +4311,10 @@ export interface SearchEntryInfoBase<B> {
      */
     bodyPreview: B;
     /**
+     * format of the entry's body, may have any value meaningful for the client
+     */
+    bodyFormat?: BodyFormat | null;
+    /**
      * heading of the entry
      */
     heading: string;
@@ -4333,7 +4371,7 @@ export interface SearchTextPageInfoBase<B> {
      */
     page: number;
     /**
-     * total number of pages
+     * total number of entries found
      */
     total: number;
     /**
