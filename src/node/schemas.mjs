@@ -1527,6 +1527,10 @@ export const NODE_API_SCHEMAS = {
                 "size": {
                     type: "integer"
                 },
+                "textContent": {
+                    type: "string",
+                    nullable: true
+                },
                 "postingId": {
                     type: "string",
                     nullable: true
@@ -1641,15 +1645,15 @@ export const NODE_API_SCHEMAS = {
                 },
                 "width": {
                     type: "integer",
-                    default: 0
+                    nullable: true
                 },
                 "height": {
                     type: "integer",
-                    default: 0
+                    nullable: true
                 },
                 "orientation": {
                     type: "integer",
-                    default: 1
+                    nullable: true
                 },
                 "size": {
                     type: "integer"
@@ -1658,9 +1662,6 @@ export const NODE_API_SCHEMAS = {
             required: [
                 "id",
                 "path",
-                "width",
-                "height",
-                "orientation",
                 "size",
             ],
             additionalProperties: false
@@ -1883,6 +1884,70 @@ export const NODE_API_SCHEMAS = {
             }
         },
 
+        RecommendedPostingInfo: {
+            type: "object",
+            properties: {
+                "nodeName": {
+                    type: "string"
+                },
+                "postingId": {
+                    type: "string"
+                },
+                "ownerName": {
+                    type: "string"
+                },
+                "ownerFullName": {
+                    type: "string",
+                    nullable: true
+                },
+                "ownerAvatar": {
+                    anyOf: [
+                        {
+                            $ref: "node#/definitions/AvatarImage",
+                            type: "object",
+                            nullable: true
+                        },
+                        {
+                            type: "null"
+                        }
+                    ]
+                },
+                "heading": {
+                    type: "string"
+                },
+                "totalPositiveReactions": {
+                    type: "integer"
+                },
+                "lastDayPositiveReactions": {
+                    type: "integer"
+                },
+                "totalComments": {
+                    type: "integer"
+                },
+                "lastDayComments": {
+                    type: "integer"
+                },
+            },
+            required: [
+                "nodeName",
+                "postingId",
+                "ownerName",
+                "heading",
+                "totalPositiveReactions",
+                "lastDayPositiveReactions",
+                "totalComments",
+                "lastDayComments",
+            ],
+            additionalProperties: false
+        },
+
+        RecommendedPostingInfoArray: {
+            type: "array",
+            items: {
+                $ref: "node#/definitions/RecommendedPostingInfo"
+            }
+        },
+
         RegisteredNameSecret: {
             type: "object",
             properties: {
@@ -2084,6 +2149,30 @@ export const NODE_API_SCHEMAS = {
             additionalProperties: false
         },
 
+        SearchHistoryInfo: {
+            type: "object",
+            properties: {
+                "query": {
+                    type: "string"
+                },
+                "createdAt": {
+                    type: "integer"
+                },
+            },
+            required: [
+                "query",
+                "createdAt",
+            ],
+            additionalProperties: false
+        },
+
+        SearchHistoryInfoArray: {
+            type: "array",
+            items: {
+                $ref: "node#/definitions/SearchHistoryInfo"
+            }
+        },
+
         SearchNodeInfo: {
             type: "object",
             properties: {
@@ -2217,41 +2306,20 @@ export const NODE_API_SCHEMAS = {
             }
         },
 
-        SettingTypeModifiers: {
+        SettingValueChoice: {
             type: "object",
             properties: {
-                "format": {
-                    type: "string",
-                    nullable: true
+                "title": {
+                    type: "string"
                 },
-                "min": {
-                    type: "string",
-                    nullable: true
-                },
-                "max": {
-                    type: "string",
-                    nullable: true
-                },
-                "multiline": {
-                    type: "boolean",
-                    nullable: true
-                },
-                "never": {
-                    type: "boolean",
-                    nullable: true
-                },
-                "always": {
-                    type: "boolean",
-                    nullable: true
-                },
-                "principals": {
-                    type: "array",
-                    items: {
-                        type: "string"
-                    },
-                    nullable: true
+                "value": {
+                    type: "string"
                 },
             },
+            required: [
+                "title",
+                "value",
+            ],
             additionalProperties: false
         },
 
@@ -3345,6 +3413,10 @@ export const NODE_API_SCHEMAS = {
                 "heading": {
                     type: "string"
                 },
+                "description": {
+                    type: "string",
+                    nullable: true
+                },
                 "createdAt": {
                     type: "integer"
                 },
@@ -3660,6 +3732,10 @@ export const NODE_API_SCHEMAS = {
                 "heading": {
                     type: "string"
                 },
+                "description": {
+                    type: "string",
+                    nullable: true
+                },
                 "updateInfo": {
                     anyOf: [
                         {
@@ -3867,6 +3943,10 @@ export const NODE_API_SCHEMAS = {
                     type: "integer",
                     nullable: true
                 },
+                "recommended": {
+                    type: "boolean",
+                    nullable: true
+                },
             },
             required: [
                 "id",
@@ -3926,6 +4006,10 @@ export const NODE_API_SCHEMAS = {
                 },
                 "heading": {
                     type: "string"
+                },
+                "description": {
+                    type: "string",
+                    nullable: true
                 },
                 "updateInfo": {
                     anyOf: [
@@ -4083,6 +4167,22 @@ export const NODE_API_SCHEMAS = {
                     type: "boolean",
                     nullable: true
                 },
+                "mediaPreview": {
+                    anyOf: [
+                        {
+                            $ref: "node#/definitions/PublicMediaFileInfo",
+                            type: "object",
+                            nullable: true
+                        },
+                        {
+                            type: "null"
+                        }
+                    ]
+                },
+                "mediaPreviewId": {
+                    type: "string",
+                    nullable: true
+                },
                 "repliedTo": {
                     anyOf: [
                         {
@@ -4174,52 +4274,49 @@ export const NODE_API_SCHEMAS = {
             additionalProperties: false
         },
 
-        SettingMetaInfo: {
+        SettingTypeModifiers: {
             type: "object",
             properties: {
-                "name": {
-                    type: "string"
-                },
-                "type": {
-                    type: "string"
-                },
-                "defaultValue": {
+                "format": {
                     type: "string",
                     nullable: true
                 },
-                "privileged": {
+                "min": {
+                    type: "string",
+                    nullable: true
+                },
+                "max": {
+                    type: "string",
+                    nullable: true
+                },
+                "multiline": {
                     type: "boolean",
                     nullable: true
                 },
-                "title": {
-                    type: "string"
+                "never": {
+                    type: "boolean",
+                    nullable: true
                 },
-                "modifiers": {
-                    anyOf: [
-                        {
-                            $ref: "node#/definitions/SettingTypeModifiers",
-                            type: "object",
-                            nullable: true
-                        },
-                        {
-                            type: "null"
-                        }
-                    ]
+                "always": {
+                    type: "boolean",
+                    nullable: true
+                },
+                "items": {
+                    type: "array",
+                    items: {
+                        $ref: "node#/definitions/SettingValueChoice"
+                    },
+                    nullable: true
+                },
+                "principals": {
+                    type: "array",
+                    items: {
+                        type: "string"
+                    },
+                    nullable: true
                 },
             },
-            required: [
-                "name",
-                "type",
-                "title",
-            ],
             additionalProperties: false
-        },
-
-        SettingMetaInfoArray: {
-            type: "array",
-            items: {
-                $ref: "node#/definitions/SettingMetaInfo"
-            }
         },
 
         StorySummaryData: {
@@ -4450,6 +4547,10 @@ export const NODE_API_SCHEMAS = {
                 },
                 "heading": {
                     type: "string"
+                },
+                "description": {
+                    type: "string",
+                    nullable: true
                 },
                 "repliedTo": {
                     anyOf: [
@@ -4845,61 +4946,51 @@ export const NODE_API_SCHEMAS = {
             }
         },
 
-        PluginInfo: {
+        SettingMetaInfo: {
             type: "object",
             properties: {
-                "nodeId": {
-                    type: "string"
-                },
-                "local": {
-                    type: "boolean"
-                },
                 "name": {
                     type: "string"
                 },
+                "type": {
+                    type: "string"
+                },
+                "defaultValue": {
+                    type: "string",
+                    nullable: true
+                },
+                "privileged": {
+                    type: "boolean",
+                    nullable: true
+                },
                 "title": {
-                    type: "string",
-                    nullable: true
+                    type: "string"
                 },
-                "description": {
-                    type: "string",
-                    nullable: true
-                },
-                "location": {
-                    type: "string",
-                    nullable: true
-                },
-                "acceptedEvents": {
-                    type: "array",
-                    items: {
-                        type: "string"
-                    },
-                    nullable: true
-                },
-                "settings": {
-                    type: "array",
-                    items: {
-                        $ref: "node#/definitions/SettingMetaInfo"
-                    },
-                    nullable: true
-                },
-                "tokenId": {
-                    type: "string",
-                    nullable: true
+                "modifiers": {
+                    anyOf: [
+                        {
+                            $ref: "node#/definitions/SettingTypeModifiers",
+                            type: "object",
+                            nullable: true
+                        },
+                        {
+                            type: "null"
+                        }
+                    ]
                 },
             },
             required: [
-                "nodeId",
-                "local",
                 "name",
+                "type",
+                "title",
             ],
             additionalProperties: false
         },
 
-        PluginInfoArray: {
+        SettingMetaInfoArray: {
             type: "array",
             items: {
-                $ref: "node#/definitions/PluginInfo"
+                $ref: "node#/definitions/SettingMetaInfo"
             }
         },
 
@@ -5099,6 +5190,64 @@ export const NODE_API_SCHEMAS = {
                 "totalInFuture",
             ],
             additionalProperties: false
+        },
+
+        PluginInfo: {
+            type: "object",
+            properties: {
+                "nodeId": {
+                    type: "string"
+                },
+                "local": {
+                    type: "boolean"
+                },
+                "name": {
+                    type: "string"
+                },
+                "title": {
+                    type: "string",
+                    nullable: true
+                },
+                "description": {
+                    type: "string",
+                    nullable: true
+                },
+                "location": {
+                    type: "string",
+                    nullable: true
+                },
+                "acceptedEvents": {
+                    type: "array",
+                    items: {
+                        type: "string"
+                    },
+                    nullable: true
+                },
+                "settings": {
+                    type: "array",
+                    items: {
+                        $ref: "node#/definitions/SettingMetaInfo"
+                    },
+                    nullable: true
+                },
+                "tokenId": {
+                    type: "string",
+                    nullable: true
+                },
+            },
+            required: [
+                "nodeId",
+                "local",
+                "name",
+            ],
+            additionalProperties: false
+        },
+
+        PluginInfoArray: {
+            type: "array",
+            items: {
+                $ref: "node#/definitions/PluginInfo"
+            }
         },
 
         PushContent: {

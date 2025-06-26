@@ -33,6 +33,52 @@ export class MoeraNode extends Caller {
     }
 
     /**
+     * Get a list of previously executed search queries, optionally filtered by the given ``prefix`` and limited by the
+     * given ``limit``. The node may decide to return fewer queries than the given ``limit``. The queries are always
+     * sorted by creation timestamp, descending.
+     *
+     * @param {string | null} prefix - find queries with the specified prefix (case-insensitive)
+     * @param {number | null} limit - maximum number of queries returned
+     * @return {Promise<API.SearchHistoryInfo[]>}
+     */
+    async getSearchHistory(
+        prefix: string | null = null, limit: number | null = null
+    ): Promise<API.SearchHistoryInfo[]> {
+        const location = ut`/activity/search`;
+        const params = {prefix, limit};
+        return await this.call("getSearchHistory", location, {
+            method: "GET", params, schema: "SearchHistoryInfoArray"
+        }) as API.SearchHistoryInfo[];
+    }
+
+    /**
+     * Save a search query in the registry.
+     *
+     * @param {API.SearchHistoryText} historyText
+     * @return {Promise<API.SearchHistoryInfo>}
+     */
+    async saveToSearchHistory(historyText: API.SearchHistoryText): Promise<API.SearchHistoryInfo> {
+        const location = "/activity/search";
+        return await this.call("saveToSearchHistory", location, {
+            method: "POST", body: historyText, schema: "SearchHistoryInfo"
+        }) as API.SearchHistoryInfo;
+    }
+
+    /**
+     * Delete a search query from the registry.
+     *
+     * @param {string} query - the query to be deleted
+     * @return {Promise<API.Result>}
+     */
+    async deleteFromSearchHistory(query: string): Promise<API.Result> {
+        const location = ut`/activity/search`;
+        const params = {query};
+        return await this.call("deleteFromSearchHistory", location, {
+            method: "DELETE", params, schema: "Result"
+        }) as API.Result;
+    }
+
+    /**
      * Get a slice of the list of all orders sent by the sheriff, delimited by the ``before`` or ``after`` moment and
      * the given ``limit``. If neither ``before`` nor ``after`` are provided, the latest orders are returned. The node
      * may decide to return fewer orders than the given ``limit``. The orders are always sorted by moment, descending.
@@ -1014,6 +1060,26 @@ export class MoeraNode extends Caller {
     }
 
     /**
+     * Delete all stories from the feed with optional filtering.
+     *
+     * @param {string} feedName - name of the feed
+     * @param {API.StoryType | null} type - delete only the stories of the given type
+     * @param {string | null} receiver - delete only the stories about postings located at the given node
+     * @param {boolean | null} recommended - delete only the stories about recommended postings
+     * @return {Promise<API.Result>}
+     */
+    async deleteFeedStories(
+        feedName: string, type: API.StoryType | null = null, receiver: string | null = null,
+        recommended: boolean | null = null
+    ): Promise<API.Result> {
+        const location = ut`/feeds/${feedName}/stories`;
+        const params = {type, receiver, recommended};
+        return await this.call("deleteFeedStories", location, {
+            method: "DELETE", params, schema: "Result"
+        }) as API.Result;
+    }
+
+    /**
      * Get the list of all groups of friends that exist on the node.
      *
      * @return {Promise<API.FriendGroupInfo[]>}
@@ -1852,6 +1918,120 @@ export class MoeraNode extends Caller {
         const location = "/push-relay";
         return await this.call("registerAtPushRelay", location, {
             method: "POST", body: attributes, schema: "Result"
+        }) as API.Result;
+    }
+
+    /**
+     * Find postings known to the recommendation service and may be of interest to the client. If the client is
+     * authenticated, the service may tune the recommendations for them. \
+     * \
+     * The service may decide to return fewer recommendations than the given ``limit``.
+     *
+     * @param {string | null} sheriff - filter out entries prohibited by the given sheriff
+     * @param {number | null} limit - maximum number of recommendations returned
+     * @return {Promise<API.RecommendedPostingInfo[]>}
+     */
+    async getRecommendedPostings(
+        sheriff: string | null = null, limit: number | null = null
+    ): Promise<API.RecommendedPostingInfo[]> {
+        const location = ut`/recommendations/postings`;
+        const params = {sheriff, limit};
+        return await this.call("getRecommendedPostings", location, {
+            method: "GET", params, schema: "RecommendedPostingInfoArray"
+        }) as API.RecommendedPostingInfo[];
+    }
+
+    /**
+     * Find postings known to the recommendation service and may be of interest to the client to read them. If the
+     * client is authenticated, the service may tune the recommendations for them. \
+     * \
+     * The service may decide to return fewer recommendations than the given ``limit``.
+     *
+     * @param {string | null} sheriff - filter out entries prohibited by the given sheriff
+     * @param {number | null} limit - maximum number of recommendations returned
+     * @return {Promise<API.RecommendedPostingInfo[]>}
+     */
+    async getRecommendedPostingsForReading(
+        sheriff: string | null = null, limit: number | null = null
+    ): Promise<API.RecommendedPostingInfo[]> {
+        const location = ut`/recommendations/postings/reading`;
+        const params = {sheriff, limit};
+        return await this.call("getRecommendedPostingsForReading", location, {
+            method: "GET", params, schema: "RecommendedPostingInfoArray"
+        }) as API.RecommendedPostingInfo[];
+    }
+
+    /**
+     * Find postings known to the recommendation service and may be of interest to the client to take part in the
+     * discussion. If the client is authenticated, the service may tune the recommendations for them. \
+     * \
+     * The service may decide to return fewer recommendations than the given ``limit``.
+     *
+     * @param {string | null} sheriff - filter out entries prohibited by the given sheriff
+     * @param {number | null} limit - maximum number of recommendations returned
+     * @return {Promise<API.RecommendedPostingInfo[]>}
+     */
+    async getRecommendedPostingsForCommenting(
+        sheriff: string | null = null, limit: number | null = null
+    ): Promise<API.RecommendedPostingInfo[]> {
+        const location = ut`/recommendations/postings/commenting`;
+        const params = {sheriff, limit};
+        return await this.call("getRecommendedPostingsForCommenting", location, {
+            method: "GET", params, schema: "RecommendedPostingInfoArray"
+        }) as API.RecommendedPostingInfo[];
+    }
+
+    /**
+     * Inform the recommendation service that the recommended posting was accepted by the client.
+     *
+     * @param {string} remoteNodeName - name of the remote node
+     * @param {string} postingId - ID of the posting on the remote node
+     * @return {Promise<API.Result>}
+     */
+    async acceptRecommendedPosting(remoteNodeName: string, postingId: string): Promise<API.Result> {
+        const location = ut`/recommendations/postings/accepted/${remoteNodeName}/${postingId}`;
+        return await this.call("acceptRecommendedPosting", location, {
+            method: "POST", schema: "Result"
+        }) as API.Result;
+    }
+
+    /**
+     * Inform the recommendation service that the recommended posting was rejected by the client.
+     *
+     * @param {string} remoteNodeName - name of the remote node
+     * @param {string} postingId - ID of the posting on the remote node
+     * @return {Promise<API.Result>}
+     */
+    async rejectRecommendedPosting(remoteNodeName: string, postingId: string): Promise<API.Result> {
+        const location = ut`/recommendations/postings/rejected/${remoteNodeName}/${postingId}`;
+        return await this.call("rejectRecommendedPosting", location, {
+            method: "POST", schema: "Result"
+        }) as API.Result;
+    }
+
+    /**
+     * Ask the recommendation service to exclude all content from the given node from future recommendations.
+     *
+     * @param {string} remoteNodeName - name of the remote node
+     * @return {Promise<API.Result>}
+     */
+    async excludeNodeFromRecommendations(remoteNodeName: string): Promise<API.Result> {
+        const location = ut`/recommendations/nodes/excluded/${remoteNodeName}`;
+        return await this.call("excludeNodeFromRecommendations", location, {
+            method: "POST", schema: "Result"
+        }) as API.Result;
+    }
+
+    /**
+     * Allow the recommendation service to include the content from the given node to future recommendations.
+     *
+     * @param {string} remoteNodeName - name of the remote node
+     * @return {Promise<API.Result>}
+     */
+    async allowNodeInRecommendations(remoteNodeName: string): Promise<API.Result> {
+        const location = ut`/recommendations/nodes/excluded/${remoteNodeName}`;
+        return await this.call("allowNodeInRecommendations", location, {
+            method: "DELETE", schema: "Result"
         }) as API.Result;
     }
 

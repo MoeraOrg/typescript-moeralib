@@ -65,8 +65,9 @@ export const SCOPE_VALUES: Record<Scope, number> = {
     "all": 0x3fffffff,
 };
 
-export type SearchContentUpdateType = "block" | "comment-add" | "comment-update" | "comment-delete" | "friend"
-    | "profile" | "posting-add" | "posting-update" | "posting-delete" | "reaction-add" | "reaction-delete"
+export type SearchContentUpdateType = "block" | "comment-add" | "comment-update" | "comment-update-heading"
+    | "comment-update-media-text" | "comment-delete" | "friend" | "profile" | "posting-add" | "posting-update"
+    | "posting-update-heading" | "posting-update-media-text" | "posting-delete" | "reaction-add" | "reaction-delete"
     | "reactions-delete-all" | "subscribe" | "unblock" | "unfriend" | "unsubscribe";
 
 export type SearchEngine = "google";
@@ -1554,6 +1555,10 @@ export interface PrivateMediaFileInfo {
      */
     size: number;
     /**
+     * the text contained in the image, if any
+     */
+    textContent?: string | null;
+    /**
      * ID of the posting linked to the media
      */
     postingId?: string | null;
@@ -1663,16 +1668,16 @@ export interface PublicMediaFileInfo {
     /**
      * width of the media in pixels (``null``, if the media file is not an image or video)
      */
-    width: number;
+    width?: number | null;
     /**
      * height of the media in pixels (``null``, if the media file is not an image or video)
      */
-    height: number;
+    height?: number | null;
     /**
      * media orientation, the value should be interpreted like the orientation value present in JPEG EXIF data
      * (``null``, if the media file is not an image or video)
      */
-    orientation: number;
+    orientation?: number | null;
     /**
      * size of the media file in bytes
      */
@@ -1911,6 +1916,49 @@ export interface ReactionOverride {
     majorOperations?: ReactionOperations | null;
 }
 
+export interface RecommendedPostingInfo {
+    /**
+     * name of the node
+     */
+    nodeName: string;
+    /**
+     * ID of the posting on the node
+     */
+    postingId: string;
+    /**
+     * node name of the posting's owner
+     */
+    ownerName: string;
+    /**
+     * full name of the posting's owner
+     */
+    ownerFullName?: string | null;
+    /**
+     * avatar of the posting's owner
+     */
+    ownerAvatar?: AvatarImage | null;
+    /**
+     * heading of the posting
+     */
+    heading: string;
+    /**
+     * total number of positive reactions to the posting
+     */
+    totalPositiveReactions: number;
+    /**
+     * number of positive reactions added to the posting in the previous 24 hours
+     */
+    lastDayPositiveReactions: number;
+    /**
+     * total number of comments to the posting
+     */
+    totalComments: number;
+    /**
+     * number of comments added to the posting in the previous 24 hours
+     */
+    lastDayComments: number;
+}
+
 export interface RegisteredNameSecret {
     name: string;
     /**
@@ -2097,6 +2145,40 @@ export interface SearchBlockUpdate {
     blockedOperation: BlockedOperation;
 }
 
+export interface SearchCommentHeadingUpdate {
+    /**
+     * ID of the posting
+     */
+    postingId: string;
+    /**
+     * ID of the comment
+     */
+    commentId: string;
+    /**
+     * heading of the posting
+     */
+    heading: string;
+}
+
+export interface SearchCommentMediaTextUpdate {
+    /**
+     * ID of the posting
+     */
+    postingId: string;
+    /**
+     * ID of the comment
+     */
+    commentId: string;
+    /**
+     * ID of the media
+     */
+    mediaId: string;
+    /**
+     * text content of the media
+     */
+    textContent: string;
+}
+
 export interface SearchCommentUpdate {
     /**
      * ID of the posting the comment belongs to
@@ -2167,6 +2249,24 @@ export interface SearchHashtagFilter {
     limit?: number | null;
 }
 
+export interface SearchHistoryInfo {
+    /**
+     * the search query
+     */
+    query: string;
+    /**
+     * creation timestamp of the record in the search history
+     */
+    createdAt: number;
+}
+
+export interface SearchHistoryText {
+    /**
+     * the search query
+     */
+    query: string;
+}
+
 export interface SearchNodeFilter {
     /**
      * the search query
@@ -2219,6 +2319,32 @@ export interface SearchNodePageInfo {
      * the nodes
      */
     nodes: SearchNodeInfo[];
+}
+
+export interface SearchPostingHeadingUpdate {
+    /**
+     * ID of the posting
+     */
+    postingId: string;
+    /**
+     * heading of the posting
+     */
+    heading: string;
+}
+
+export interface SearchPostingMediaTextUpdate {
+    /**
+     * ID of the posting
+     */
+    postingId: string;
+    /**
+     * ID of the media
+     */
+    mediaId: string;
+    /**
+     * text content of the media
+     */
+    textContent: string;
 }
 
 export interface SearchPostingUpdate {
@@ -2387,38 +2513,15 @@ export interface SettingMetaAttributes {
     privileged?: boolean | null;
 }
 
-export interface SettingTypeModifiers {
+export interface SettingValueChoice {
     /**
-     * preferred format of displaying the value\
-     * (``int``)
-     * 
-     * * ``size`` - data size in bytes/kilobytes/megabytes etc.
+     * human-friendly description of the value
      */
-    format?: string | null;
+    title: string;
     /**
-     * (``int``, ``Duration``) minimal value
+     * the value
      */
-    min?: string | null;
-    /**
-     * (``int``, ``Duration``) maximal value
-     */
-    max?: string | null;
-    /**
-     * (``string``) ``true``, if the value is a multiline text
-     */
-    multiline?: boolean | null;
-    /**
-     * (``Duration``) ``true``, if value ``never`` is allowed
-     */
-    never?: boolean | null;
-    /**
-     * (``Duration``) ``true``, if value ``always`` is allowed
-     */
-    always?: boolean | null;
-    /**
-     * (``Principal``) list of allowed principals
-     */
-    principals?: PrincipalFlag[] | null;
+    value: string;
 }
 
 export interface SheriffComplaintDecisionText {
@@ -3552,6 +3655,11 @@ export interface CommentRevisionInfoBase<B> {
      */
     heading: string;
     /**
+     * in addition to ``heading``, gives a more detailed description of the revision that can be used for search
+     * engines and link previews
+     */
+    description?: string | null;
+    /**
      * revision creation timestamp - the real time when the revision was created
      */
     createdAt: number;
@@ -3946,6 +4054,11 @@ export interface PostingInfoBase<B> {
      */
     heading: string;
     /**
+     * in addition to ``heading``, gives a more detailed description of the posting that can be used for search engines
+     * and link previews
+     */
+    description?: string | null;
+    /**
      * description of the latest update
      */
     updateInfo?: UpdateInfo | null;
@@ -4062,6 +4175,11 @@ export interface PostingInfoBase<B> {
      * total number of comments to the posting
      */
     totalComments?: number | null;
+    /**
+     * ``true``, if the posting was recommended by a recommendation service (for cached copies of remote postings
+     * only), ``false`` otherwise
+     */
+    recommended?: boolean | null;
 }
 
 export type EncodedPostingInfo = PostingInfoBase<string>;
@@ -4101,6 +4219,11 @@ export interface PostingRevisionInfoBase<B> {
      * heading of the revision
      */
     heading: string;
+    /**
+     * in addition to ``heading``, gives a more detailed description of the revision that can be used for search
+     * engines and link previews
+     */
+    description?: string | null;
     /**
      * description of the latest update
      */
@@ -4327,6 +4450,14 @@ export interface SearchEntryInfoBase<B> {
      */
     videoPresent?: boolean | null;
     /**
+     * preview of the media attached to the entry, if any
+     */
+    mediaPreview?: PublicMediaFileInfo | null;
+    /**
+     * ID of the media attached to the entry that was chosen for the preview
+     */
+    mediaPreviewId?: string | null;
+    /**
      * information about the comment this comment is replying to
      */
     repliedTo?: SearchRepliedTo | null;
@@ -4383,68 +4514,43 @@ export interface SearchTextPageInfoBase<B> {
 export type EncodedSearchTextPageInfo = SearchTextPageInfoBase<string>;
 export type SearchTextPageInfo = SearchTextPageInfoBase<Body>;
 
-export interface SettingDescriptor {
+export interface SettingTypeModifiers {
     /**
-     * name of the setting
+     * preferred format of displaying the value\
+     * (``int``, ``string``)
+     * 
+     * * ``size`` - data size in bytes/kilobytes/megabytes etc.;
+     * * ``select`` - selection of a value from the provided list.
      */
-    name: string;
+    format?: string | null;
     /**
-     * type of the setting
+     * (``int``, ``Duration``) minimal value
      */
-    type: SettingType;
+    min?: string | null;
     /**
-     * default value of the setting
+     * (``int``, ``Duration``) maximal value
      */
-    defaultValue?: string | null;
+    max?: string | null;
     /**
-     * the setting is internal - not displayed to the user
+     * (``string``) ``true``, if the value is a multiline text
      */
-    internal?: boolean | null;
+    multiline?: boolean | null;
     /**
-     * the setting is privileged - may be changed by server owner only
+     * (``Duration``) ``true``, if value ``never`` is allowed
      */
-    privileged?: boolean | null;
+    never?: boolean | null;
     /**
-     * the setting is stored in the database in encrypted form
+     * (``Duration``) ``true``, if value ``always`` is allowed
      */
-    encrypted?: boolean | null;
+    always?: boolean | null;
     /**
-     * human-friendly description of the setting
+     * (``string``) list of selection items
      */
-    title?: string | null;
+    items?: SettingValueChoice[] | null;
     /**
-     * additional modifiers that may help to choose a proper UI component for the setting value and to validate the
-     * input; the meaning of the modifiers depends on the setting type
+     * (``Principal``) list of allowed principals
      */
-    modifiers?: SettingTypeModifiers | null;
-}
-
-export interface SettingMetaInfo {
-    /**
-     * name of the setting
-     */
-    name: string;
-    /**
-     * type of the setting
-     */
-    type: SettingType;
-    /**
-     * default value of the setting
-     */
-    defaultValue?: string | null;
-    /**
-     * the setting is privileged - may be changed by server owner only
-     */
-    privileged?: boolean | null;
-    /**
-     * human-friendly description of the setting
-     */
-    title: string;
-    /**
-     * additional modifiers that may help to choose a proper UI component for the setting value and to validate the
-     * input; the meaning of the modifiers depends on the setting type
-     */
-    modifiers?: SettingTypeModifiers | null;
+    principals?: PrincipalFlag[] | null;
 }
 
 export interface StorySummaryData {
@@ -4584,6 +4690,11 @@ export interface CommentInfoBase<B> {
      * heading of the comment
      */
     heading: string;
+    /**
+     * in addition to ``heading``, gives a more detailed description of the comment that can be used for search engines
+     * and link previews
+     */
+    description?: string | null;
     /**
      * information about the comment this comment is replying to
      */
@@ -4803,71 +4914,68 @@ export interface EntryInfoBase<B> {
 export type EncodedEntryInfo = EntryInfoBase<string>;
 export type EntryInfo = EntryInfoBase<Body>;
 
-export interface PluginDescription {
+export interface SettingDescriptor {
     /**
-     * a unique plugin name; can contain only small latin letters, digits or hyphen
+     * name of the setting
      */
     name: string;
     /**
-     * user-readable title of the plugin
+     * type of the setting
+     */
+    type: SettingType;
+    /**
+     * default value of the setting
+     */
+    defaultValue?: string | null;
+    /**
+     * the setting is internal - not displayed to the user
+     */
+    internal?: boolean | null;
+    /**
+     * the setting is privileged - may be changed by server owner only
+     */
+    privileged?: boolean | null;
+    /**
+     * the setting is stored in the database in encrypted form
+     */
+    encrypted?: boolean | null;
+    /**
+     * human-friendly description of the setting
      */
     title?: string | null;
     /**
-     * user-readable description of the purpose of the plugin
+     * additional modifiers that may help to choose a proper UI component for the setting value and to validate the
+     * input; the meaning of the modifiers depends on the setting type
      */
-    description?: string | null;
-    /**
-     * URL of the plugin; used by the node to call the plugin API
-     */
-    location?: string | null;
-    /**
-     * list of types of internal events the plugin wants to receive; Read more about internal events.
-     */
-    acceptedEvents?: string[] | null;
-    /**
-     * plugin settings to be added to the list of node settings, the settings appear in the list with a prefix
-     * ``plugin.&lt;plugin name>.``
-     */
-    options?: SettingDescriptor[] | null;
+    modifiers?: SettingTypeModifiers | null;
 }
 
-export interface PluginInfo {
+export interface SettingMetaInfo {
     /**
-     * ID of the node this plugin is connected to
-     */
-    nodeId: string;
-    /**
-     * ``true`` if the plugin is enabled for a particular node only, ``false``, if it is enabled for the whole server
-     */
-    local: boolean;
-    /**
-     * a unique plugin name
+     * name of the setting
      */
     name: string;
     /**
-     * user-readable title of the plugin
+     * type of the setting
      */
-    title?: string | null;
+    type: SettingType;
     /**
-     * user-readable description of the purpose of the plugin
+     * default value of the setting
      */
-    description?: string | null;
+    defaultValue?: string | null;
     /**
-     * URL of the plugin; used by the node to call the plugin API
+     * the setting is privileged - may be changed by server owner only
      */
-    location?: string | null;
+    privileged?: boolean | null;
     /**
-     * list of types of internal events the plugin wants to receive; Read more about internal events.
+     * human-friendly description of the setting
      */
-    acceptedEvents?: string[] | null;
+    title: string;
     /**
-     * plugin settings to be added to the list of node settings
+     * additional modifiers that may help to choose a proper UI component for the setting value and to validate the
+     * input; the meaning of the modifiers depends on the setting type
      */
-    settings?: SettingMetaInfo[] | null;
-    /**
-     * ID of the token used to authenticate the plugin
-     */
-    tokenId?: string | null;
+    modifiers?: SettingTypeModifiers | null;
 }
 
 export interface StoryInfoBase<B> {
@@ -5010,6 +5118,73 @@ export interface FeedSliceInfoBase<B> {
 
 export type EncodedFeedSliceInfo = FeedSliceInfoBase<string>;
 export type FeedSliceInfo = FeedSliceInfoBase<Body>;
+
+export interface PluginDescription {
+    /**
+     * a unique plugin name; can contain only small latin letters, digits or hyphen
+     */
+    name: string;
+    /**
+     * user-readable title of the plugin
+     */
+    title?: string | null;
+    /**
+     * user-readable description of the purpose of the plugin
+     */
+    description?: string | null;
+    /**
+     * URL of the plugin; used by the node to call the plugin API
+     */
+    location?: string | null;
+    /**
+     * list of types of internal events the plugin wants to receive; Read more about internal events.
+     */
+    acceptedEvents?: string[] | null;
+    /**
+     * plugin settings to be added to the list of node settings, the settings appear in the list with a prefix
+     * ``plugin.&lt;plugin name>.``
+     */
+    options?: SettingDescriptor[] | null;
+}
+
+export interface PluginInfo {
+    /**
+     * ID of the node this plugin is connected to
+     */
+    nodeId: string;
+    /**
+     * ``true`` if the plugin is enabled for a particular node only, ``false``, if it is enabled for the whole server
+     */
+    local: boolean;
+    /**
+     * a unique plugin name
+     */
+    name: string;
+    /**
+     * user-readable title of the plugin
+     */
+    title?: string | null;
+    /**
+     * user-readable description of the purpose of the plugin
+     */
+    description?: string | null;
+    /**
+     * URL of the plugin; used by the node to call the plugin API
+     */
+    location?: string | null;
+    /**
+     * list of types of internal events the plugin wants to receive; Read more about internal events.
+     */
+    acceptedEvents?: string[] | null;
+    /**
+     * plugin settings to be added to the list of node settings
+     */
+    settings?: SettingMetaInfo[] | null;
+    /**
+     * ID of the token used to authenticate the plugin
+     */
+    tokenId?: string | null;
+}
 
 export interface PushContentBase<B> {
     /**
