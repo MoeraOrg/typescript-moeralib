@@ -391,18 +391,6 @@ export interface SubscriptionOperations {
     delete?: PrincipalValue | null;
 }
 
-export interface AcceptedReactions {
-    /**
-     * comma-separated list of codes of the positive reactions that are accepted; a code may be prefixed by ``0x`` to
-     * designate hexadecimal number and ``+`` to designate a recommended reaction
-     */
-    positive: string;
-    /**
-     * comma-separated list of codes of the negative reactions that are accepted (the format is the same as above)
-     */
-    negative: string;
-}
-
 export interface AskDescription {
     /**
      * request subject
@@ -840,13 +828,6 @@ export interface ClientReactionInfo {
      * if present, the reaction will be erased at this time
      */
     deadline?: number | null;
-}
-
-export interface CommentMassAttributes {
-    /**
-     * the operations and the corresponding principals that are overridden by the comment's owner ("senior")
-     */
-    seniorOperations?: CommentOperations | null;
 }
 
 export interface CommentTotalInfo {
@@ -1969,6 +1950,19 @@ export interface RegisteredNameSecret {
      * base64-encoded secret of the updating key
      */
     secret?: string | null;
+}
+
+export interface RejectedReactions {
+    /**
+     * space-separated list of hexadecimal codes of the positive reactions that are rejected; a special code ``*``
+     * means rejection of any non-standard reaction
+     */
+    positive?: string | null;
+    /**
+     * space-separated list of hexadecimal codes of the negative reactions that are rejected (the format is the same as
+     * above)
+     */
+    negative?: string | null;
 }
 
 export interface RemoteFeed {
@@ -3624,6 +3618,17 @@ export interface Body {
     linkPreviews?: LinkPreview[] | null;
 }
 
+export interface CommentMassAttributes {
+    /**
+     * the operations and the corresponding principals that are overridden by the comment's owner ("senior")
+     */
+    seniorOperations?: CommentOperations | null;
+    /**
+     * types of reactions that the comment rejects, as defined by the posting's owner ("senior")
+     */
+    seniorRejectedReactions?: RejectedReactions | null;
+}
+
 export interface CommentRevisionInfoBase<B> {
     id: string;
     /**
@@ -3716,9 +3721,14 @@ export interface CommentSourceText {
      */
     media?: MediaWithDigest[] | null;
     /**
-     * types of reactions that the comment accepts
+     * types of reactions that the comment rejects
      */
-    acceptedReactions?: AcceptedReactions | null;
+    rejectedReactions?: RejectedReactions | null;
+    /**
+     * types of reactions that the comment rejects, as defined by the posting's owner ("senior"); only the senior may
+     * set this
+     */
+    seniorRejectedReactions?: RejectedReactions | null;
     /**
      * ID of the comment this comment is replying to
      */
@@ -3785,9 +3795,14 @@ export interface CommentText {
      */
     createdAt?: number | null;
     /**
-     * types of reactions that the comment accepts
+     * types of reactions that the comment rejects
      */
-    acceptedReactions?: AcceptedReactions | null;
+    rejectedReactions?: RejectedReactions | null;
+    /**
+     * types of reactions that the comment rejects, as defined by the posting's owner ("senior"); only the senior may
+     * set this
+     */
+    seniorRejectedReactions?: RejectedReactions | null;
     /**
      * ID of the comment this comment is replying to
      */
@@ -3845,9 +3860,13 @@ export interface DraftText {
      */
     ownerAvatar?: AvatarDescription | null;
     /**
-     * types of reactions that the posting accepts
+     * types of reactions that the posting rejects
      */
-    acceptedReactions?: AcceptedReactions | null;
+    rejectedReactions?: RejectedReactions | null;
+    /**
+     * types of reactions that the posting's comments should reject
+     */
+    commentRejectedReactions?: RejectedReactions | null;
     /**
      * the source text of the draft, a string representation of a JSON structure
      */
@@ -4156,9 +4175,13 @@ export interface PostingInfoBase<B> {
      */
     sheriffMarks?: SheriffMark[] | null;
     /**
-     * types of reactions that the posting accepts
+     * types of reactions that the posting rejects
      */
-    acceptedReactions?: AcceptedReactions | null;
+    rejectedReactions?: RejectedReactions | null;
+    /**
+     * types of reactions that the posting's comments should reject
+     */
+    commentRejectedReactions?: RejectedReactions | null;
     /**
      * details of the existing reaction (if any) of the client's owner
      */
@@ -4288,9 +4311,13 @@ export interface PostingSourceText {
      */
     media?: MediaWithDigest[] | null;
     /**
-     * types of reactions that the posting accepts
+     * types of reactions that the posting rejects
      */
-    acceptedReactions?: AcceptedReactions | null;
+    rejectedReactions?: RejectedReactions | null;
+    /**
+     * types of reactions that the posting's comments should rejects
+     */
+    commentRejectedReactions?: RejectedReactions | null;
     /**
      * the operations and the corresponding principals
      */
@@ -4356,9 +4383,13 @@ export interface PostingText {
      */
     createdAt?: number | null;
     /**
-     * types of reactions that the posting accepts
+     * types of reactions that the posting rejects
      */
-    acceptedReactions?: AcceptedReactions | null;
+    rejectedReactions?: RejectedReactions | null;
+    /**
+     * types of reactions that the posting's comments should reject
+     */
+    commentRejectedReactions?: RejectedReactions | null;
     /**
      * list of publications in feeds that must be made after creating the posting (for new postings only)
      */
@@ -4757,9 +4788,17 @@ export interface CommentInfoBase<B> {
      */
     sheriffMarks?: SheriffMark[] | null;
     /**
-     * types of reactions that the comment accepts
+     * types of reactions that the comment rejects
      */
-    acceptedReactions?: AcceptedReactions | null;
+    rejectedReactions?: RejectedReactions | null;
+    /**
+     * types of reactions that the comment rejects, as defined by the comments' owner
+     */
+    ownerRejectedReactions?: RejectedReactions | null;
+    /**
+     * types of reactions that the comment rejects, as defined by the posting's owner ("senior")
+     */
+    seniorRejectedReactions?: RejectedReactions | null;
     /**
      * details of the existing reaction (if any) of the client's owner
      */
@@ -4850,9 +4889,13 @@ export interface DraftInfoBase<B> {
      */
     ownerAvatar?: AvatarImage | null;
     /**
-     * types of reactions that the posting accepts
+     * types of reactions that the posting rejects
      */
-    acceptedReactions?: AcceptedReactions | null;
+    rejectedReactions?: RejectedReactions | null;
+    /**
+     * types of reactions that the comment should reject, set for posting drafts, if needed
+     */
+    commentRejectedReactions?: RejectedReactions | null;
     /**
      * the source text of the draft, a string representation of a JSON structure
      */
