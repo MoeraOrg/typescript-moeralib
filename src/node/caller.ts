@@ -364,7 +364,7 @@ export class Caller {
             srcBodies = false
         }: CallOptions
     ): Promise<any> {
-        let bodyEncoded: string | Buffer | null = null;
+        let bodyEncoded: string | Buffer | null;
         if (body != null && !Buffer.isBuffer(body)) {
             if (srcBodies) {
                 body = encodeBodies(body);
@@ -416,7 +416,7 @@ export class Caller {
         const signal = abortSignal(method, bodyEncoded);
         let response;
         try {
-             response = await fetch(url, {method, headers, body: bodyEncoded, signal});
+             response = await fetch(url, {method, headers, body: bodyEncoded as BodyInit, signal});
         } catch (e) {
             throw new MoeraNodeConnectionError(String(e));
         }
