@@ -653,6 +653,19 @@ export class MoeraNode extends Caller {
     }
 
     /**
+     * Fetch the detailed information, including relationships, about the contacts matching the filter.
+     *
+     * @param {API.ContactFilter} filter
+     * @return {Promise<API.ContactWithRelationships[]>}
+     */
+    async fetchContacts(filter: API.ContactFilter): Promise<API.ContactWithRelationships[]> {
+        const location = "/people/contacts/fetch";
+        return await this.call("fetchContacts", location, {
+            method: "POST", body: filter, schema: "ContactWithRelationshipsArray"
+        }) as API.ContactWithRelationships[];
+    }
+
+    /**
      * Check whether the credentials are initialized already.
      *
      * @return {Promise<API.CredentialsCreated>}
@@ -718,6 +731,20 @@ export class MoeraNode extends Caller {
         return await this.call("resetCredentials", location, {
             method: "POST", schema: "EmailHint"
         }) as API.EmailHint;
+    }
+
+    /**
+     * Verify the credentials reset token. If the token is valid, it may be used later to change the credentials
+     * without knowing the password.
+     *
+     * @param {API.CredentialsResetToken} resetToken
+     * @return {Promise<API.VerificationInfo>}
+     */
+    async verifyCredentialsResetToken(resetToken: API.CredentialsResetToken): Promise<API.VerificationInfo> {
+        const location = "/credentials/reset/verify";
+        return await this.call("verifyCredentialsResetToken", location, {
+            method: "POST", body: resetToken, schema: "VerificationInfo"
+        }) as API.VerificationInfo;
     }
 
     /**
@@ -1927,15 +1954,17 @@ export class MoeraNode extends Caller {
      * \
      * The service may decide to return fewer recommendations than the given ``limit``.
      *
+     * @param {string | null} feed - name of the feed to get recommendations for ("news" by default); recommendations
+     * for every feed are tracked separately
      * @param {string | null} sheriff - filter out entries prohibited by the given sheriff
      * @param {number | null} limit - maximum number of recommendations returned
      * @return {Promise<API.RecommendedPostingInfo[]>}
      */
     async getRecommendedPostings(
-        sheriff: string | null = null, limit: number | null = null
+        feed: string | null = null, sheriff: string | null = null, limit: number | null = null
     ): Promise<API.RecommendedPostingInfo[]> {
         const location = ut`/recommendations/postings`;
-        const params = {sheriff, limit};
+        const params = {feed, sheriff, limit};
         return await this.call("getRecommendedPostings", location, {
             method: "GET", params, schema: "RecommendedPostingInfoArray"
         }) as API.RecommendedPostingInfo[];
@@ -1986,12 +2015,17 @@ export class MoeraNode extends Caller {
      *
      * @param {string} remoteNodeName - name of the remote node
      * @param {string} postingId - ID of the posting on the remote node
+     * @param {string | null} feed - name of the feed the recommendation is accepted to ("news" by default);
+     * recommendations for every feed are tracked separately
      * @return {Promise<API.Result>}
      */
-    async acceptRecommendedPosting(remoteNodeName: string, postingId: string): Promise<API.Result> {
+    async acceptRecommendedPosting(
+        remoteNodeName: string, postingId: string, feed: string | null = null
+    ): Promise<API.Result> {
         const location = ut`/recommendations/postings/accepted/${remoteNodeName}/${postingId}`;
+        const params = {feed};
         return await this.call("acceptRecommendedPosting", location, {
-            method: "POST", schema: "Result"
+            method: "POST", params, schema: "Result"
         }) as API.Result;
     }
 
@@ -2000,13 +2034,37 @@ export class MoeraNode extends Caller {
      *
      * @param {string} remoteNodeName - name of the remote node
      * @param {string} postingId - ID of the posting on the remote node
+     * @param {string | null} feed - name of the feed the recommendation is rejected for ("news" by default);
+     * recommendations for every feed are tracked separately
      * @return {Promise<API.Result>}
      */
-    async rejectRecommendedPosting(remoteNodeName: string, postingId: string): Promise<API.Result> {
+    async rejectRecommendedPosting(
+        remoteNodeName: string, postingId: string, feed: string | null = null
+    ): Promise<API.Result> {
         const location = ut`/recommendations/postings/rejected/${remoteNodeName}/${postingId}`;
+        const params = {feed};
         return await this.call("rejectRecommendedPosting", location, {
-            method: "POST", schema: "Result"
+            method: "POST", params, schema: "Result"
         }) as API.Result;
+    }
+
+    /**
+     * Find the most active nodes known to the recommendation service. \
+     * \
+     * The service may decide to return fewer recommendations than the given ``limit``.
+     *
+     * @param {string | null} sheriff - filter out nodes prohibited by the given sheriff
+     * @param {number | null} limit - maximum number of recommendations returned
+     * @return {Promise<API.RecommendedNodeInfo[]>}
+     */
+    async getRecommendedNodesByActivity(
+        sheriff: string | null = null, limit: number | null = null
+    ): Promise<API.RecommendedNodeInfo[]> {
+        const location = ut`/recommendations/nodes/active`;
+        const params = {sheriff, limit};
+        return await this.call("getRecommendedNodesByActivity", location, {
+            method: "GET", params, schema: "RecommendedNodeInfoArray"
+        }) as API.RecommendedNodeInfo[];
     }
 
     /**

@@ -1972,6 +1972,54 @@ export const NODE_API_SCHEMAS = {
             additionalProperties: false
         },
 
+        RecommendedNodeInfo: {
+            type: "object",
+            properties: {
+                "nodeName": {
+                    type: "string"
+                },
+                "fullName": {
+                    type: "string",
+                    nullable: true
+                },
+                "title": {
+                    type: "string",
+                    nullable: true
+                },
+                "avatar": {
+                    anyOf: [
+                        {
+                            $ref: "node#/definitions/AvatarImage",
+                            type: "object",
+                            nullable: true
+                        },
+                        {
+                            type: "null"
+                        }
+                    ]
+                },
+                "subscribersTotal": {
+                    type: "integer"
+                },
+                "postingsTotal": {
+                    type: "integer"
+                },
+            },
+            required: [
+                "nodeName",
+                "subscribersTotal",
+                "postingsTotal",
+            ],
+            additionalProperties: false
+        },
+
+        RecommendedNodeInfoArray: {
+            type: "array",
+            items: {
+                $ref: "node#/definitions/RecommendedNodeInfo"
+            }
+        },
+
         RemoteMediaInfo: {
             type: "object",
             properties: {
@@ -3136,6 +3184,27 @@ export const NODE_API_SCHEMAS = {
             additionalProperties: false
         },
 
+        VerificationInfo: {
+            type: "object",
+            properties: {
+                "correct": {
+                    type: "boolean"
+                },
+                "errorCode": {
+                    type: "string",
+                    nullable: true
+                },
+                "errorMessage": {
+                    type: "string",
+                    nullable: true
+                },
+            },
+            required: [
+                "correct",
+            ],
+            additionalProperties: false
+        },
+
         WhoAmI: {
             type: "object",
             properties: {
@@ -3173,6 +3242,10 @@ export const NODE_API_SCHEMAS = {
                 },
                 "frozen": {
                     type: "boolean",
+                    nullable: true
+                },
+                "type": {
+                    type: "string",
                     nullable: true
                 },
             },
@@ -3478,6 +3551,88 @@ export const NODE_API_SCHEMAS = {
             type: "array",
             items: {
                 $ref: "node#/definitions/CommentRevisionInfo"
+            }
+        },
+
+        ContactWithRelationships: {
+            type: "object",
+            properties: {
+                "contact": {
+                    $ref: "node#/definitions/ContactInfo"
+                },
+                "subscriber": {
+                    anyOf: [
+                        {
+                            $ref: "node#/definitions/SubscriberInfo",
+                            type: "object",
+                            nullable: true
+                        },
+                        {
+                            type: "null"
+                        }
+                    ]
+                },
+                "subscription": {
+                    anyOf: [
+                        {
+                            $ref: "node#/definitions/SubscriptionInfo",
+                            type: "object",
+                            nullable: true
+                        },
+                        {
+                            type: "null"
+                        }
+                    ]
+                },
+                "friend": {
+                    anyOf: [
+                        {
+                            $ref: "node#/definitions/FriendInfo",
+                            type: "object",
+                            nullable: true
+                        },
+                        {
+                            type: "null"
+                        }
+                    ]
+                },
+                "friendOf": {
+                    anyOf: [
+                        {
+                            $ref: "node#/definitions/FriendOfInfo",
+                            type: "object",
+                            nullable: true
+                        },
+                        {
+                            type: "null"
+                        }
+                    ]
+                },
+                "blocked": {
+                    type: "array",
+                    items: {
+                        $ref: "node#/definitions/BlockedUserInfo"
+                    },
+                    nullable: true
+                },
+                "blockedBy": {
+                    type: "array",
+                    items: {
+                        $ref: "node#/definitions/BlockedByUserInfo"
+                    },
+                    nullable: true
+                },
+            },
+            required: [
+                "contact",
+            ],
+            additionalProperties: false
+        },
+
+        ContactWithRelationshipsArray: {
+            type: "array",
+            items: {
+                $ref: "node#/definitions/ContactWithRelationships"
             }
         },
 

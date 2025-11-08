@@ -13,6 +13,8 @@ export type BodyFormat = "message" | "application";
 
 export type DraftType = "new-posting" | "posting-update" | "new-comment" | "comment-update";
 
+export type NodeType = "regular" | "search" | "application";
+
 export type OperationStatus = "waiting" | "added" | "started" | "succeeded" | "failed" | "unknown";
 
 export type PrincipalFlag = "none" | "private" | "admin" | "owner" | "secret" | "senior" | "enigma" | "major"
@@ -837,6 +839,13 @@ export interface CommentTotalInfo {
     total: number;
 }
 
+export interface ContactFilter {
+    /**
+     * list of node names to fetch
+     */
+    nodeNames: string[];
+}
+
 export interface ContactInfo {
     nodeName: string;
     fullName?: string | null;
@@ -908,6 +917,10 @@ export interface CredentialsCreated {
      * ``true`` if the credentials are initialized already, ``false`` otherwise
      */
     created: boolean;
+}
+
+export interface CredentialsResetToken {
+    token: string;
 }
 
 export interface DeleteNodeStatus {
@@ -1963,6 +1976,30 @@ export interface RejectedReactions {
      * above)
      */
     negative?: string | null;
+}
+
+export interface RecommendedNodeInfo {
+    nodeName: string;
+    /**
+     * node owner's full name
+     */
+    fullName?: string | null;
+    /**
+     * node title
+     */
+    title?: string | null;
+    /**
+     * node owner's avatar
+     */
+    avatar?: AvatarImage | null;
+    /**
+     * total number of subscribers of the node
+     */
+    subscribersTotal: number;
+    /**
+     * total number of public postings published by the node
+     */
+    postingsTotal: number;
 }
 
 export interface RemoteFeed {
@@ -3438,6 +3475,21 @@ export interface UserListSliceInfo {
     totalInFuture: number;
 }
 
+export interface VerificationInfo {
+    /**
+     * ``true`` if the verified object is correct, ``false`` otherwise
+     */
+    correct: boolean;
+    /**
+     * error code
+     */
+    errorCode?: string | null;
+    /**
+     * human-readable error message
+     */
+    errorMessage?: string | null;
+}
+
 export interface WhoAmI {
     nodeName?: string | null;
     /**
@@ -3464,6 +3516,10 @@ export interface WhoAmI {
      * ``true`` if the node is frozen due to inactivity, ``false`` (the default) otherwise
      */
     frozen?: boolean | null;
+    /**
+     * type of the node, ``regular`` by default
+     */
+    type?: NodeType | null;
 }
 
 export interface ActivityReactionFilter {
@@ -3828,6 +3884,37 @@ export interface CommentText {
      * senior may set this
      */
     seniorOperations?: CommentOperations | null;
+}
+
+export interface ContactWithRelationships {
+    /**
+     * contact's details
+     */
+    contact: ContactInfo;
+    /**
+     * information about the contact's subscription to the node's feeds
+     */
+    subscriber?: SubscriberInfo | null;
+    /**
+     * information about the nodes's subscription to the contact's feeds
+     */
+    subscription?: SubscriptionInfo | null;
+    /**
+     * information about the node's friendship with the contact
+     */
+    friend?: FriendInfo | null;
+    /**
+     * information about the contact's friendship with the node
+     */
+    friendOf?: FriendOfInfo | null;
+    /**
+     * information about blocking the contact by the node
+     */
+    blocked?: BlockedUserInfo[] | null;
+    /**
+     * information about blocking the node by the contact
+     */
+    blockedBy?: BlockedByUserInfo[] | null;
 }
 
 export interface DraftText {

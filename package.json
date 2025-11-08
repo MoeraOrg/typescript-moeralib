@@ -1,6 +1,6 @@
 {
   "name": "moeralib",
-  "version": "0.17.1",
+  "version": "0.17.10",
   "description": "Library to interact with Moera decentralized social network",
   "repository": {
     "type": "git",
@@ -22,16 +22,16 @@
   },
   "types": "./typings/index.d.ts",
   "dependencies": {
-    "@scure/bip39": "^1.3.0",
-    "ajv": "^8.16.0",
+    "@scure/bip39": "^1.6.0",
+    "ajv": "^8.17.1",
     "ajv-formats": "^3.0.1",
-    "json-rpc-2.0": "^1.7.0",
+    "json-rpc-2.0": "^1.7.1",
     "lodash.clonedeep": "^4.5.0"
   },
   "devDependencies": {
     "@types/lodash.clonedeep": "^4.5.9",
     "@types/node": "^20.14.2",
-    "typescript": "^5.4.5"
+    "typescript": "^5.9.3"
   },
   "exports": {
     ".": {
