@@ -1599,6 +1599,20 @@ export class MoeraNode extends Caller {
     }
 
     /**
+     * Get all postings coming from the given external source.
+     *
+     * @param {string} external - URI of the external source of the posting
+     * @return {Promise<API.PostingInfo[]>}
+     */
+    async getPostingsByExternalSource(external: string): Promise<API.PostingInfo[]> {
+        const location = ut`/postings`;
+        const params = {external};
+        return await this.call("getPostingsByExternalSource", location, {
+            method: "GET", params, schema: "PostingInfoArray", bodies: true
+        }) as API.PostingInfo[];
+    }
+
+    /**
      * Update the posting, creating a new revision of it. The text is processed just like in the ``POST`` request.
      *
      * @param {string} id - ID of the posting
@@ -1867,6 +1881,18 @@ export class MoeraNode extends Caller {
         return await this.call("updateProfile", location, {
             method: "PUT", body: profile, schema: "ProfileInfo"
         }) as API.ProfileInfo;
+    }
+
+    /**
+     * Repeat verification process (resend the confirmation mail) for the current e-mail address set in the profile.
+     *
+     * @return {Promise<API.Result>}
+     */
+    async verifyEmail(): Promise<API.Result> {
+        const location = "/profile/email/verify";
+        return await this.call("verifyEmail", location, {
+            method: "POST", schema: "Result"
+        }) as API.Result;
     }
 
     /**

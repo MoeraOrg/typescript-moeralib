@@ -72,7 +72,7 @@ export type SearchContentUpdateType = "block" | "comment-add" | "comment-update"
     | "posting-update-heading" | "posting-update-media-text" | "posting-delete" | "reaction-add" | "reaction-delete"
     | "reactions-delete-all" | "subscribe" | "unblock" | "unfriend" | "unsubscribe";
 
-export type SearchEngine = "google";
+export type SearchEngine = "google" | "bing";
 
 export type SearchEntryType = "all" | "posting" | "comment";
 
@@ -1619,6 +1619,10 @@ export interface ProfileInfo {
      * node owner's E-mail address
      */
     email?: string | null;
+    /**
+     * ``true``, if the node owner's E-mail address is verified, ``false`` otherwise
+     */
+    emailVerified?: boolean | null;
     /**
      * node title
      */
@@ -4290,6 +4294,11 @@ export interface PostingInfoBase<B> {
      * only), ``false`` otherwise
      */
     recommended?: boolean | null;
+    /**
+     * URI of the external source the posting was received from; used by software that automatically forwards postings
+     * from other social networks (for admin only)
+     */
+    externalSourceUri?: string | null;
 }
 
 export type EncodedPostingInfo = PostingInfoBase<string>;
@@ -4509,6 +4518,11 @@ export interface PostingText {
      * the operations and the corresponding principals that are overridden in reactions to the posting's comments
      */
     commentReactionOperations?: ReactionOperations | null;
+    /**
+     * URI of the external source the posting was received from; used by software that automatically forwards postings
+     * from other social networks (for admin only)
+     */
+    externalSourceUri?: string | null;
 }
 
 export interface ReactionCreated {
