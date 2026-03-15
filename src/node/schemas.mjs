@@ -204,6 +204,10 @@ export const NODE_API_SCHEMAS = {
                     type: "string",
                     nullable: true
                 },
+                "trustComment": {
+                    type: "string",
+                    nullable: true
+                },
                 "overrideComment": {
                     type: "string",
                     nullable: true
@@ -4768,6 +4772,10 @@ export const NODE_API_SCHEMAS = {
                 },
                 "signatureVersion": {
                     type: "integer",
+                    nullable: true
+                },
+                "premoderating": {
+                    type: "boolean",
                     nullable: true
                 },
                 "operations": {

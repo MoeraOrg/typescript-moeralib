@@ -13,6 +13,29 @@ export function createAttachmentFingerprint0(digest: Buffer | null): Buffer {
     return fingerprintBytes({"version": 0, "objectType": "ATTACHMENT", digest}, ATTACHMENT_FINGERPRINT0_SCHEMA);
 }
 
+const CARTE_FINGERPRINT3_SCHEMA: FingerprintSchema = [
+    ["version", "number"],
+    ["objectType", "string"],
+    ["ownerName", "string"],
+    ["addresses", "string[]"],
+    ["beginning", "number"],
+    ["deadline", "number"],
+    ["nodeName", "string"],
+    ["clientScope", "number"],
+    ["adminScope", "number"],
+    ["salt", "bytes"],
+];
+
+export function createCarteFingerprint3(
+    ownerName: string | null, addresses: string[] | null, beginning: number | null, deadline: number | null,
+    nodeName: string | null, clientScope: number | null, adminScope: number | null, salt: Buffer | null
+): Buffer {
+    return fingerprintBytes(
+        {"version": 3, "objectType": "CARTE", ownerName, addresses, beginning, deadline, nodeName, clientScope,
+        adminScope, salt}, CARTE_FINGERPRINT3_SCHEMA
+    );
+}
+
 const CARTE_FINGERPRINT2_SCHEMA: FingerprintSchema = [
     ["version", "number"],
     ["objectType", "string"],
@@ -76,6 +99,32 @@ export function createCarteFingerprint0(
     return fingerprintBytes(
         {"version": 0, "objectType": "CARTE", ownerName, address, beginning, deadline, permissions, salt},
         CARTE_FINGERPRINT0_SCHEMA
+    );
+}
+
+const COMMENT_FINGERPRINT1_SCHEMA: FingerprintSchema = [
+    ["version", "number"],
+    ["objectType", "string"],
+    ["ownerName", "string"],
+    ["postingFingerprint", "bytes"],
+    ["repliedToFingerprint", "bytes"],
+    ["bodySrcHash", "bytes"],
+    ["bodySrcFormat", "string"],
+    ["body", "string"],
+    ["bodyFormat", "string"],
+    ["createdAt", "number"],
+    ["permissions", "number"],
+    ["attachments", "bytes[]"],
+];
+
+export function createCommentFingerprint1(
+    ownerName: string | null, postingFingerprint: Buffer | null, repliedToFingerprint: Buffer | null,
+    bodySrcHash: Buffer | null, bodySrcFormat: string | null, body: string | null, bodyFormat: string | null,
+    createdAt: number | null, permissions: number | null, attachments: Buffer[] | null
+): Buffer {
+    return fingerprintBytes(
+        {"version": 1, "objectType": "COMMENT", ownerName, postingFingerprint, repliedToFingerprint, bodySrcHash,
+        bodySrcFormat, body, bodyFormat, createdAt, permissions, attachments}, COMMENT_FINGERPRINT1_SCHEMA
     );
 }
 
