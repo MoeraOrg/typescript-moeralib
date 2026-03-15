@@ -1,4 +1,5 @@
-export type FingerprintPrimitiveType = "string" | "boolean" | "number" | "bytes" | "bytes[]" | FingerprintSchema;
+export type FingerprintPrimitiveType =
+    "string" | "string[]" | "boolean" | "number" | "bytes" | "bytes[]" | FingerprintSchema;
 export type FingerprintSchema = [string, FingerprintPrimitiveType][];
 export type Fingerprint = Partial<Record<string, any>>;
 
