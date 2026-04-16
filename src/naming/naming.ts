@@ -12,6 +12,21 @@ export const MAIN_NAMING_SERVER = "https://naming.moera.org/moera-naming";
  * Moera developers' naming server.
  */
 export const DEV_NAMING_SERVER = "https://naming-dev.moera.org/moera-naming";
+/**
+ * Node name used to represent anonymous content author.
+ */
+export const ANONYMOUS_NODE_NAME = "unk_0";
+/**
+ * Public key used to verify signatures of anonymous content.
+ */
+export const ANONYMOUS_NODE_PUBLIC_KEY = Buffer.from(
+    "VNKYmrV8b1XR7phWvrTUbkfnxsPTKvHIcvJLGrBZQr0Z8eKVdTooBkIWS0CECPjLxPGaQkcKkMcZ6M6wEsJm9A==",
+    "base64"
+);
+/**
+ * Private key used to sign anonymous content.
+ */
+export const ANONYMOUS_NODE_PRIVATE_KEY = Buffer.from("tCb+02pUSC6FLdQLPvrUhSBjD0xiV5Q+fQmZY3PKybo=", "base64");
 
 /**
  * Generic naming server error.
