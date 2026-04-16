@@ -263,6 +263,10 @@ export const NODE_API_SCHEMAS = {
                     type: "string",
                     nullable: true
                 },
+                "edit": {
+                    type: "string",
+                    nullable: true
+                },
             },
             additionalProperties: false
         },
@@ -375,6 +379,18 @@ export const NODE_API_SCHEMAS = {
                 "path": {
                     type: "string"
                 },
+                "directPath": {
+                    type: "string",
+                    nullable: true
+                },
+                "directPathExpiresAt": {
+                    type: "integer",
+                    nullable: true
+                },
+                "mimeType": {
+                    type: "string",
+                    nullable: true
+                },
                 "width": {
                     type: "integer",
                     nullable: true
@@ -406,6 +422,18 @@ export const NODE_API_SCHEMAS = {
                 },
                 "path": {
                     type: "string"
+                },
+                "directPath": {
+                    type: "string",
+                    nullable: true
+                },
+                "directPathExpiresAt": {
+                    type: "integer",
+                    nullable: true
+                },
+                "mimeType": {
+                    type: "string",
+                    nullable: true
                 },
                 "width": {
                     type: "integer",
@@ -1282,9 +1310,19 @@ export const NODE_API_SCHEMAS = {
                 "targetWidth": {
                     type: "integer"
                 },
+                "hash": {
+                    type: "string"
+                },
                 "directPath": {
                     type: "string",
                     nullable: true
+                },
+                "directPathExpiresAt": {
+                    type: "integer",
+                    nullable: true
+                },
+                "mimeType": {
+                    type: "string"
                 },
                 "width": {
                     type: "integer"
@@ -1299,6 +1337,8 @@ export const NODE_API_SCHEMAS = {
             },
             required: [
                 "targetWidth",
+                "hash",
+                "mimeType",
                 "width",
                 "height",
             ],
@@ -1496,6 +1536,10 @@ export const NODE_API_SCHEMAS = {
                     type: "string",
                     nullable: true
                 },
+                "directPathExpiresAt": {
+                    type: "integer",
+                    nullable: true
+                },
                 "mimeType": {
                     type: "string"
                 },
@@ -1514,6 +1558,10 @@ export const NODE_API_SCHEMAS = {
                 "size": {
                     type: "integer"
                 },
+                "title": {
+                    type: "string",
+                    nullable: true
+                },
                 "textContent": {
                     type: "string",
                     nullable: true
@@ -1527,6 +1575,14 @@ export const NODE_API_SCHEMAS = {
                     items: {
                         $ref: "node#/definitions/MediaFilePreviewInfo"
                     },
+                    nullable: true
+                },
+                "attachment": {
+                    type: "boolean",
+                    nullable: true
+                },
+                "malware": {
+                    type: "boolean",
                     nullable: true
                 },
                 "operations": {
@@ -1633,6 +1689,18 @@ export const NODE_API_SCHEMAS = {
                 },
                 "path": {
                     type: "string"
+                },
+                "directPath": {
+                    type: "string",
+                    nullable: true
+                },
+                "directPathExpiresAt": {
+                    type: "integer",
+                    nullable: true
+                },
+                "mimeType": {
+                    type: "string",
+                    nullable: true
                 },
                 "width": {
                     type: "integer",
@@ -2040,6 +2108,14 @@ export const NODE_API_SCHEMAS = {
                 },
                 "digest": {
                     type: "string",
+                    nullable: true
+                },
+                "mimeType": {
+                    type: "string",
+                    nullable: true
+                },
+                "attachment": {
+                    type: "boolean",
                     nullable: true
                 },
             },
@@ -4342,6 +4418,10 @@ export const NODE_API_SCHEMAS = {
                 },
                 "videoPresent": {
                     type: "boolean",
+                    nullable: true
+                },
+                "attachmentCount": {
+                    type: "integer",
                     nullable: true
                 },
                 "mediaPreview": {

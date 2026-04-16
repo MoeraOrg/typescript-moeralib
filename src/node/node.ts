@@ -1329,11 +1329,15 @@ export class MoeraNode extends Caller {
      * the smallest in size, but the best in quality variant of the media, according to the width provided
      * @param {boolean | null} download - if ``true``, the node will add ``Content-Disposition: attachment`` header to
      * the output
+     * @param {boolean | null} ignoremalware - if ``true``, the node will ignore malware detection and return the media
+     * file; only admin may use this option
      * @return {Promise<Blob>}
      */
-    async getPrivateMedia(id: string, width: number | null = null, download: boolean | null = null): Promise<Blob> {
+    async getPrivateMedia(
+        id: string, width: number | null = null, download: boolean | null = null, ignoremalware: boolean | null = null
+    ): Promise<Blob> {
         const location = ut`/media/private/${id}/data`;
-        const params = {width, download};
+        const params = {width, download, ignoremalware};
         return await this.call("getPrivateMedia", location, {
             method: "GET", params, schema: "blob"
         }) as Blob;
@@ -1349,6 +1353,22 @@ export class MoeraNode extends Caller {
         const location = ut`/media/private/${id}/info`;
         return await this.call("getPrivateMediaInfo", location, {
             method: "GET", schema: "PrivateMediaFileInfo"
+        }) as API.PrivateMediaFileInfo;
+    }
+
+    /**
+     * Update media file details.
+     *
+     * @param {string} id - media file ID
+     * @param {API.PrivateMediaFileAttributes} attributes
+     * @return {Promise<API.PrivateMediaFileInfo>}
+     */
+    async updatePrivateMediaInfo(
+        id: string, attributes: API.PrivateMediaFileAttributes
+    ): Promise<API.PrivateMediaFileInfo> {
+        const location = ut`/media/private/${id}/info`;
+        return await this.call("updatePrivateMediaInfo", location, {
+            method: "PUT", body: attributes, schema: "PrivateMediaFileInfo"
         }) as API.PrivateMediaFileInfo;
     }
 
@@ -2251,6 +2271,20 @@ export class MoeraNode extends Caller {
         return await this.call("verifyRemoteCommentReaction", location, {
             method: "POST", schema: "AsyncOperationCreated"
         }) as API.AsyncOperationCreated;
+    }
+
+    /**
+     * Download the private media file from the remote node and store it at the home node.
+     *
+     * @param {string} remoteNodeName - name of the remote node
+     * @param {string} id - id of the media file
+     * @return {Promise<API.PrivateMediaFileInfo>}
+     */
+    async downloadRemoteMedia(remoteNodeName: string, id: string): Promise<API.PrivateMediaFileInfo> {
+        const location = ut`/nodes/${remoteNodeName}/media/private/${id}/download`;
+        return await this.call("downloadRemoteMedia", location, {
+            method: "POST", schema: "PrivateMediaFileInfo"
+        }) as API.PrivateMediaFileInfo;
     }
 
     /**

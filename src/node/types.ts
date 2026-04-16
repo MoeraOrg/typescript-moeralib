@@ -334,6 +334,10 @@ export interface PrivateMediaFileOperations {
      * view the media file
      */
     view?: PrincipalValue | null;
+    /**
+     * edit the media file attributes
+     */
+    edit?: PrincipalValue | null;
 }
 
 export interface ProfileOperations {
@@ -483,6 +487,19 @@ export interface AvatarImage {
      */
     path: string;
     /**
+     * location of the media file, relative to the ``/media``; points to a static image served directly from a
+     * filesystem or CDN
+     */
+    directPath?: string | null;
+    /**
+     * direct path expiration timestamp - the real time when the direct path will not be valid anymore
+     */
+    directPathExpiresAt?: number | null;
+    /**
+     * MIME type of the media
+     */
+    mimeType?: string | null;
+    /**
      * width of the media in pixels (``null``, if the media file is not an image/video)
      */
     width?: number | null;
@@ -509,6 +526,19 @@ export interface AvatarInfo {
      * virtual location of the media file, relative to the ``/media`` virtual page
      */
     path: string;
+    /**
+     * location of the media file, relative to the ``/media``; points to a static image served directly from a
+     * filesystem or CDN
+     */
+    directPath?: string | null;
+    /**
+     * direct path expiration timestamp - the real time when the direct path will not be valid anymore
+     */
+    directPathExpiresAt?: number | null;
+    /**
+     * MIME type of the media
+     */
+    mimeType?: string | null;
     /**
      * width of the media in pixels (``null``, if the media file is not an image/video)
      */
@@ -1273,10 +1303,22 @@ export interface MediaFilePreviewInfo {
      */
     targetWidth: number;
     /**
-     * location of the media file, relative to the ``/media``; points to a static image served directly from a
-     * filesystem; static images do not accept any query parameters including authentication parameters
+     * SHA-1 hash of the preview
+     */
+    hash: string;
+    /**
+     * location of the preview, relative to the ``/media``; points to a static image served directly from a filesystem
+     * or CDN
      */
     directPath?: string | null;
+    /**
+     * direct path expiration timestamp - the real time when the direct path will not be valid anymore
+     */
+    directPathExpiresAt?: number | null;
+    /**
+     * MIME type of the preview
+     */
+    mimeType: string;
     /**
      * actual width of the preview in pixels
      */
@@ -1514,6 +1556,13 @@ export interface PostingSourceInfo {
     createdAt: number;
 }
 
+export interface PrivateMediaFileAttributes {
+    /**
+     * title of the media file, may be used as an alternative to the file name
+     */
+    title?: string | null;
+}
+
 export interface PrivateMediaFileInfo {
     /**
      * ID of the media file
@@ -1529,9 +1578,13 @@ export interface PrivateMediaFileInfo {
     path: string;
     /**
      * location of the media file, relative to the ``/media``; points to a static image served directly from a
-     * filesystem; static images do not accept any query parameters including authentication parameters
+     * filesystem or CDN
      */
     directPath?: string | null;
+    /**
+     * direct path expiration timestamp - the real time when the direct path will not be valid anymore
+     */
+    directPathExpiresAt?: number | null;
     /**
      * MIME type of the media
      */
@@ -1554,6 +1607,10 @@ export interface PrivateMediaFileInfo {
      */
     size: number;
     /**
+     * title of the media file, may be used as an alternative to the file name
+     */
+    title?: string | null;
+    /**
      * the text contained in the image, if any
      */
     textContent?: string | null;
@@ -1565,6 +1622,15 @@ export interface PrivateMediaFileInfo {
      * list of media previews - downscaled versions of the media
      */
     previews?: MediaFilePreviewInfo[] | null;
+    /**
+     * ``true`` if the media cannot be displayed as an image or video and should be displayed as an attachment instead,
+     * ``false`` (default) otherwise
+     */
+    attachment?: boolean | null;
+    /**
+     * ``true`` if the media file is considered to be malware, ``false`` (default) otherwise
+     */
+    malware?: boolean | null;
     /**
      * the supported operations and the corresponding principals
      */
@@ -1668,6 +1734,19 @@ export interface PublicMediaFileInfo {
      * virtual location of the media file, relative to the ``/media`` virtual page
      */
     path: string;
+    /**
+     * location of the media file, relative to the ``/media``; points to a static image served directly from a
+     * filesystem or CDN
+     */
+    directPath?: string | null;
+    /**
+     * direct path expiration timestamp - the real time when the direct path will not be valid anymore
+     */
+    directPathExpiresAt?: number | null;
+    /**
+     * MIME type of the media
+     */
+    mimeType?: string | null;
     /**
      * width of the media in pixels (``null``, if the media file is not an image or video)
      */
@@ -2035,6 +2114,15 @@ export interface RemoteMedia {
      * cryptographic digest of the media file
      */
     digest?: string | null;
+    /**
+     * MIME type of the media
+     */
+    mimeType: string;
+    /**
+     * ``true`` if the media cannot be displayed as an image or video and should be displayed as an attachment instead,
+     * ``false`` (default) otherwise
+     */
+    attachment?: boolean | null;
 }
 
 export interface RemoteMediaInfo {
@@ -2050,6 +2138,15 @@ export interface RemoteMediaInfo {
      * cryptographic digest of the media file
      */
     digest?: string | null;
+    /**
+     * MIME type of the media
+     */
+    mimeType?: string | null;
+    /**
+     * ``true`` if the media cannot be displayed as an image or video and should be displayed as an attachment instead,
+     * ``false`` (default) otherwise
+     */
+    attachment?: boolean | null;
 }
 
 export interface RemotePosting {
@@ -2214,9 +2311,13 @@ export interface SearchCommentMediaTextUpdate {
      */
     mediaId: string;
     /**
+     * title of the media file, may be used as an alternative to the file name
+     */
+    title?: string | null;
+    /**
      * text content of the media
      */
-    textContent: string;
+    textContent?: string | null;
 }
 
 export interface SearchCommentUpdate {
@@ -2271,6 +2372,11 @@ export interface SearchHashtagFilter {
      * contain a video
      */
     videoPresent?: boolean | null;
+    /**
+     * if ``true``, return only the entries containing a file attachment, if ``false``, return only the entries that do
+     * not contain a file attachment
+     */
+    attachmentPresent?: boolean | null;
     /**
      * filter out entries prohibited by the given sheriff
      */
@@ -2382,9 +2488,13 @@ export interface SearchPostingMediaTextUpdate {
      */
     mediaId: string;
     /**
+     * title of the media file, may be used as an alternative to the file name
+     */
+    title?: string | null;
+    /**
      * text content of the media
      */
-    textContent: string;
+    textContent?: string | null;
 }
 
 export interface SearchPostingUpdate {
@@ -2505,6 +2615,11 @@ export interface SearchTextFilter {
      * contain a video
      */
     videoPresent?: boolean | null;
+    /**
+     * if ``true``, return only the entries containing a file attachment, if ``false``, return only the entries that do
+     * not contain a file attachment
+     */
+    attachmentPresent?: boolean | null;
     /**
      * return entries created at or after this timestamp
      */
@@ -3910,7 +4025,7 @@ export interface ContactWithRelationships {
      */
     subscriber?: SubscriberInfo | null;
     /**
-     * information about the nodes's subscription to the contact's feeds
+     * information about the node's subscription to the contact's feeds
      */
     subscription?: SubscriptionInfo | null;
     /**
@@ -4591,6 +4706,10 @@ export interface SearchEntryInfoBase<B> {
      * if ``true``, the entry contains a video
      */
     videoPresent?: boolean | null;
+    /**
+     * number of file attachments the entry contains
+     */
+    attachmentCount?: number | null;
     /**
      * preview of the media attached to the entry, if any
      */
