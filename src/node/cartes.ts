@@ -4,7 +4,7 @@ import { promisify } from 'util';
 import { CarteAttributes, CarteInfo, Scope, SCOPE_VALUES } from "./types";
 import { CarteSource } from "./caller";
 import { MoeraNode } from "./node";
-import { createCarteFingerprint2 } from "./fingerprints";
+import { createCarteFingerprint3 } from "./fingerprints";
 import { signFingerprint } from "../crypto";
 
 /**
@@ -101,8 +101,8 @@ function toScopeMask(scope: Scope[]): number {
 interface GenerateCarteOptions {
     /** length of the carte's life, in seconds */
     ttl?: number;
-    /** if set, the carte is valid for authentication from the given IP address only */
-    address?: string | null;
+    /** if set, the carte is valid for authentication from the given IP address(-es) only */
+    address?: string | string[] | null;
     /** if set, the carte is valid for authentication on the specified node only */
     nodeName?: string | null;
     /** list of permissions granted to the carte */
@@ -135,9 +135,10 @@ export async function generateCarte(
     if (Array.isArray(adminScope)) {
         adminScope = toScopeMask(adminScope);
     }
+    const addresses = address == null ? null : Array.isArray(address) ? address : [address];
     const salt = await promisify(crypto.randomBytes)(8);
-    const fingerprint = createCarteFingerprint2(
-        ownerName, address, beginning, beginning + ttl, nodeName, clientScope, adminScope, salt
+    const fingerprint = createCarteFingerprint3(
+        ownerName, addresses, beginning, beginning + ttl, nodeName, clientScope, adminScope, salt
     );
     const signature = signFingerprint(fingerprint, signingKey);
     return Buffer.concat([fingerprint, signature]).toString("base64url");
