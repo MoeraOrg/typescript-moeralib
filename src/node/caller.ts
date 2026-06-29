@@ -86,6 +86,9 @@ function encodeBodies(data: Structure | Structure[]): Structure | Structure[] {
         return data.map(item => encodeBodies(item));
     }
     const encoded = cloneDeep(data);
+    if (data.mediaCaptions != null) {
+        encoded.mediaCaptions = data.mediaCaptions.map((item: Structure) => encodeBodies(item));
+    }
     if (data.body != null) {
         encoded.body = encodeBody(data.body, data.bodyFormat);
     }
@@ -94,6 +97,9 @@ function encodeBodies(data: Structure | Structure[]): Structure | Structure[] {
     }
     if (data.bodySrc != null) {
         encoded.bodySrc = encodeBody(data.bodySrc, data.bodySrcFormat);
+    }
+    if (data.captionSrc != null) {
+        encoded.captionSrc = encodeBody(data.captionSrc, data.captionSrcFormat);
     }
     return encoded;
 }
@@ -132,6 +138,9 @@ function decodeBodies(name: string, data: Structure | Structure[]): Structure | 
     if (data.comments != null) {
         decoded.comments = data.comments.map((item: Structure) => decodeBodies(name, item));
     }
+    if (data.mediaCaptions != null) {
+        decoded.mediaCaptions = data.mediaCaptions.map((item: Structure) => decodeBodies(name, item));
+    }
     if (data.comment != null) {
         decoded.comment = decodeBodies(name, data.comment);
     }
@@ -146,6 +155,9 @@ function decodeBodies(name: string, data: Structure | Structure[]): Structure | 
     }
     if (data.bodySrc != null) {
         decoded.bodySrc = decodeBody(name, data.bodySrc, data.bodySrcFormat);
+    }
+    if (data.captionSrc != null) {
+        decoded.captionSrc = decodeBody(name, data.captionSrc, data.captionSrcFormat);
     }
     return decoded;
 }

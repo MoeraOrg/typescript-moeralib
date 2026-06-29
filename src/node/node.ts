@@ -1291,31 +1291,14 @@ export class MoeraNode extends Caller {
     }
 
     /**
-     * Upload a new media file owned by the node admin. The content of the file is passed in the request body.
+     * Upload a new private media file. The content of the file is passed in the request body.
      *
      * @param {Buffer} body
      * @param {string} contentType - content-type of ``body``
      * @return {Promise<API.PrivateMediaFileInfo>}
      */
-    async uploadAdminMedia(body: Buffer, contentType: string): Promise<API.PrivateMediaFileInfo> {
+    async uploadPrivateMedia(body: Buffer, contentType: string): Promise<API.PrivateMediaFileInfo> {
         const location = "/media/private";
-        return await this.call("uploadAdminMedia", location, {
-            method: "POST", body, contentType, schema: "PrivateMediaFileInfo"
-        }) as API.PrivateMediaFileInfo;
-    }
-
-    /**
-     * Upload a new media file owned by the given node. The content of the file is passed in the request body.
-     *
-     * @param {string} clientName - name of the node owning the media file
-     * @param {Buffer} body
-     * @param {string} contentType - content-type of ``body``
-     * @return {Promise<API.PrivateMediaFileInfo>}
-     */
-    async uploadPrivateMedia(
-        clientName: string, body: Buffer, contentType: string
-    ): Promise<API.PrivateMediaFileInfo> {
-        const location = ut`/media/private/${clientName}`;
         return await this.call("uploadPrivateMedia", location, {
             method: "POST", body, contentType, schema: "PrivateMediaFileInfo"
         }) as API.PrivateMediaFileInfo;
@@ -1329,15 +1312,17 @@ export class MoeraNode extends Caller {
      * the smallest in size, but the best in quality variant of the media, according to the width provided
      * @param {boolean | null} download - if ``true``, the node will add ``Content-Disposition: attachment`` header to
      * the output
+     * @param {string | null} grant - media grant allowing access to the media file
      * @param {boolean | null} ignoremalware - if ``true``, the node will ignore malware detection and return the media
      * file; only admin may use this option
      * @return {Promise<Blob>}
      */
     async getPrivateMedia(
-        id: string, width: number | null = null, download: boolean | null = null, ignoremalware: boolean | null = null
+        id: string, width: number | null = null, download: boolean | null = null, grant: string | null = null,
+        ignoremalware: boolean | null = null
     ): Promise<Blob> {
         const location = ut`/media/private/${id}/data`;
-        const params = {width, download, ignoremalware};
+        const params = {width, download, grant, ignoremalware};
         return await this.call("getPrivateMedia", location, {
             method: "GET", params, schema: "blob"
         }) as Blob;
@@ -1347,12 +1332,14 @@ export class MoeraNode extends Caller {
      * Get media file details.
      *
      * @param {string} id - media file ID
+     * @param {string | null} grant - media grant allowing access to the media file
      * @return {Promise<API.PrivateMediaFileInfo>}
      */
-    async getPrivateMediaInfo(id: string): Promise<API.PrivateMediaFileInfo> {
+    async getPrivateMediaInfo(id: string, grant: string | null = null): Promise<API.PrivateMediaFileInfo> {
         const location = ut`/media/private/${id}/info`;
+        const params = {grant};
         return await this.call("getPrivateMediaInfo", location, {
-            method: "GET", schema: "PrivateMediaFileInfo"
+            method: "GET", params, schema: "PrivateMediaFileInfo"
         }) as API.PrivateMediaFileInfo;
     }
 
@@ -1370,19 +1357,6 @@ export class MoeraNode extends Caller {
         return await this.call("updatePrivateMediaInfo", location, {
             method: "PUT", body: attributes, schema: "PrivateMediaFileInfo"
         }) as API.PrivateMediaFileInfo;
-    }
-
-    /**
-     * Get the list of all postings and comments the media file is attached to.
-     *
-     * @param {string} id - media file ID
-     * @return {Promise<API.EntryInfo[]>}
-     */
-    async getPrivateMediaParentEntry(id: string): Promise<API.EntryInfo[]> {
-        const location = ut`/media/private/${id}/parent`;
-        return await this.call("getPrivateMediaParentEntry", location, {
-            method: "GET", schema: "EntryInfoArray", bodies: true
-        }) as API.EntryInfo[];
     }
 
     /**
@@ -1428,6 +1402,32 @@ export class MoeraNode extends Caller {
         return await this.call("getPublicMediaInfo", location, {
             method: "GET", schema: "PublicMediaFileInfo"
         }) as API.PublicMediaFileInfo;
+    }
+
+    /**
+     * Create a lease for a media file stored on the node.
+     *
+     * @param {API.MediaLeaseAttributes} attributes
+     * @return {Promise<API.MediaLeaseInfo>}
+     */
+    async createMediaLease(attributes: API.MediaLeaseAttributes): Promise<API.MediaLeaseInfo> {
+        const location = "/media/leases";
+        return await this.call("createMediaLease", location, {
+            method: "POST", body: attributes, schema: "MediaLeaseInfo"
+        }) as API.MediaLeaseInfo;
+    }
+
+    /**
+     * Delete the lease.
+     *
+     * @param {string} id - ID of the lease
+     * @return {Promise<API.Result>}
+     */
+    async deleteMediaLease(id: string): Promise<API.Result> {
+        const location = ut`/media/leases/${id}`;
+        return await this.call("deleteMediaLease", location, {
+            method: "DELETE", schema: "Result"
+        }) as API.Result;
     }
 
     /**
@@ -2278,12 +2278,15 @@ export class MoeraNode extends Caller {
      *
      * @param {string} remoteNodeName - name of the remote node
      * @param {string} id - id of the media file
+     * @param {API.MediaDownloadAttributes} attributes
      * @return {Promise<API.PrivateMediaFileInfo>}
      */
-    async downloadRemoteMedia(remoteNodeName: string, id: string): Promise<API.PrivateMediaFileInfo> {
+    async downloadRemoteMedia(
+        remoteNodeName: string, id: string, attributes: API.MediaDownloadAttributes
+    ): Promise<API.PrivateMediaFileInfo> {
         const location = ut`/nodes/${remoteNodeName}/media/private/${id}/download`;
         return await this.call("downloadRemoteMedia", location, {
-            method: "POST", schema: "PrivateMediaFileInfo"
+            method: "POST", body: attributes, schema: "PrivateMediaFileInfo"
         }) as API.PrivateMediaFileInfo;
     }
 
@@ -3010,6 +3013,19 @@ export class MoeraNode extends Caller {
         const location = ut`/user-lists/${name}/items/${remoteNodeName}`;
         return await this.call("deleteUserListItem", location, {
             method: "DELETE", schema: "Result"
+        }) as API.Result;
+    }
+
+    /**
+     * Record a visit to a posting, comment or media.
+     *
+     * @param {API.VisitDetails} visit
+     * @return {Promise<API.Result>}
+     */
+    async recordVisit(visit: API.VisitDetails): Promise<API.Result> {
+        const location = "/visits";
+        return await this.call("recordVisit", location, {
+            method: "POST", body: visit, schema: "Result"
         }) as API.Result;
     }
 

@@ -154,6 +154,50 @@ export function createCommentFingerprint0(
     );
 }
 
+const MEDIA_GRANT_FINGERPRINT1_SCHEMA: FingerprintSchema = [
+    ["version", "number"],
+    ["objectType", "string"],
+    ["nodeName", "string"],
+    ["mediaId", "string"],
+    ["expires", "number"],
+    ["download", "boolean"],
+    ["fileName", "string"],
+    ["salt", "bytes"],
+];
+
+export function createMediaGrantFingerprint1(
+    nodeName: string | null, mediaId: string | null, expires: number | null, download: boolean | null,
+    fileName: string | null, salt: Buffer | null
+): Buffer {
+    return fingerprintBytes(
+        {"version": 1, "objectType": "MEDIA_GRANT", nodeName, mediaId, expires, download, fileName, salt},
+        MEDIA_GRANT_FINGERPRINT1_SCHEMA
+    );
+}
+
+const MEDIA_GRANT_FINGERPRINT0_SCHEMA: FingerprintSchema = [
+    ["version", "number"],
+    ["objectType", "string"],
+    ["nodeName", "string"],
+    ["postingId", "string"],
+    ["commentId", "string"],
+    ["mediaId", "string"],
+    ["expires", "number"],
+    ["download", "boolean"],
+    ["fileName", "string"],
+    ["salt", "bytes"],
+];
+
+export function createMediaGrantFingerprint0(
+    nodeName: string | null, postingId: string | null, commentId: string | null, mediaId: string | null,
+    expires: number | null, download: boolean | null, fileName: string | null, salt: Buffer | null
+): Buffer {
+    return fingerprintBytes(
+        {"version": 0, "objectType": "MEDIA_GRANT", nodeName, postingId, commentId, mediaId, expires, download, fileName,
+        salt}, MEDIA_GRANT_FINGERPRINT0_SCHEMA
+    );
+}
+
 const NOTIFICATION_PACKET_FINGERPRINT1_SCHEMA: FingerprintSchema = [
     ["version", "number"],
     ["objectType", "string"],

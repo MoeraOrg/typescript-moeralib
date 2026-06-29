@@ -24,17 +24,16 @@ export type PushContentType = "story-added" | "story-deleted" | "feed-updated";
 
 export type PushRelayType = "fcm";
 
-export type Scope = "none" | "identify" | "other" | "view-media" | "view-content" | "add-post" | "update-post"
-    | "add-comment" | "update-comment" | "react" | "delete-own-content" | "delete-others-content" | "view-people"
-    | "block" | "friend" | "remote-identify" | "drafts" | "view-feeds" | "update-feeds" | "name" | "plugins"
-    | "view-profile" | "update-profile" | "sheriff" | "view-settings" | "update-settings" | "subscribe" | "tokens"
-    | "user-lists" | "grant" | "upload-public-media" | "upload-private-media" | "view-all" | "all";
+export type Scope = "none" | "identify" | "other" | "view-content" | "add-post" | "update-post" | "add-comment"
+    | "update-comment" | "react" | "delete-own-content" | "delete-others-content" | "view-people" | "block" | "friend"
+    | "remote-identify" | "drafts" | "view-feeds" | "update-feeds" | "name" | "plugins" | "view-profile"
+    | "update-profile" | "sheriff" | "view-settings" | "update-settings" | "subscribe" | "tokens" | "user-lists"
+    | "grant" | "upload-public-media" | "upload-private-media" | "lease-media" | "view-all" | "all";
 
 export const SCOPE_VALUES: Record<Scope, number> = {
     "none": 0x00000000,
     "identify": 0x00000000,
     "other": 0x00000001,
-    "view-media": 0x00000002,
     "view-content": 0x00000004,
     "add-post": 0x00000008,
     "update-post": 0x00000010,
@@ -63,14 +62,16 @@ export const SCOPE_VALUES: Record<Scope, number> = {
     "grant": 0x08000000,
     "upload-public-media": 0x10000000,
     "upload-private-media": 0x20000000,
-    "view-all": 0x00088406,
-    "all": 0x3fffffff,
+    "lease-media": 0x40000000,
+    "view-all": 0x00088404,
+    "all": 0x7ffffffd,
 };
 
 export type SearchContentUpdateType = "block" | "comment-add" | "comment-update" | "comment-update-heading"
-    | "comment-update-media-text" | "comment-delete" | "friend" | "profile" | "posting-add" | "posting-update"
-    | "posting-update-heading" | "posting-update-media-text" | "posting-delete" | "reaction-add" | "reaction-delete"
-    | "reactions-delete-all" | "subscribe" | "unblock" | "unfriend" | "unsubscribe";
+    | "comment-update-media" | "comment-update-media-text" | "comment-delete" | "friend" | "profile" | "posting-add"
+    | "posting-update" | "posting-update-heading" | "posting-update-media" | "posting-update-media-text"
+    | "posting-delete" | "reaction-add" | "reaction-delete" | "reactions-delete-all" | "subscribe" | "unblock"
+    | "unfriend" | "unsubscribe";
 
 export type SearchEngine = "google" | "bing" | "yandex";
 
@@ -1272,6 +1273,10 @@ export interface LinkPreview {
      * hash of the image presenting the page
      */
     imageHash?: string | null;
+    /**
+     * timestamp of the page publication time
+     */
+    publishedAt?: number | null;
 }
 
 export interface LinkPreviewInfo {
@@ -1295,6 +1300,17 @@ export interface LinkPreviewInfo {
      * URL of the image presenting the page
      */
     imageUrl?: string | null;
+    /**
+     * timestamp of the page publication time
+     */
+    publishedAt?: number | null;
+}
+
+export interface MediaDownloadAttributes {
+    /**
+     * media grant allowing access to the media
+     */
+    grant: string;
 }
 
 export interface MediaFilePreviewInfo {
@@ -1306,6 +1322,10 @@ export interface MediaFilePreviewInfo {
      * SHA-1 hash of the preview
      */
     hash: string;
+    /**
+     * virtual location of the preview, relative to the ``/media`` virtual page
+     */
+    path: string;
     /**
      * location of the preview, relative to the ``/media``; points to a static image served directly from a filesystem
      * or CDN
@@ -1333,15 +1353,23 @@ export interface MediaFilePreviewInfo {
     original?: boolean | null;
 }
 
-export interface MediaWithDigest {
+export interface MediaLeaseAttributes {
+    /**
+     * name of the node that receives the lease
+     */
+    nodeName: string;
     /**
      * ID of the media file
      */
-    id: string;
+    mediaId: string;
     /**
-     * cryptographic digest of the media file
+     * ID of the posting used to verify access to the media file
      */
-    digest?: string | null;
+    postingId?: string | null;
+    /**
+     * ID of the comment used to verify access to the media file
+     */
+    commentId?: string | null;
 }
 
 export interface NameToRegister {
@@ -1417,6 +1445,28 @@ export interface NodeNameInfo {
      * the supported operations and the corresponding principals
      */
     operations?: NodeNameOperations | null;
+}
+
+export interface ParentMediaInfo {
+    /**
+     * name of the node containing the media the posting is linked to; if ``null``, the media is located on the same
+     * node as the posting
+     */
+    nodeName?: string | null;
+    /**
+     * ID of the media the posting is linked to; the media is located on the ``nodeName`` node
+     */
+    mediaId: string;
+    /**
+     * ID of the posting that owns the attachment the posting is linked to; the posting is located at the same node as
+     * the posting
+     */
+    postingId: string;
+    /**
+     * ID of the comment that owns the attachment the posting is linked to; if set, ``postingId`` contains ID of the
+     * parent posting of the comment; the comment is located at the same node as the posting
+     */
+    commentId?: string | null;
 }
 
 export interface PeopleGeneralInfo {
@@ -1512,10 +1562,6 @@ export interface PostingFeatures {
      */
     sourceFormats: SourceFormat[];
     /**
-     * maximal size of a media attachment in a post
-     */
-    mediaMaxSize: number;
-    /**
      * maximal size of a compressed image in a post
      */
     imageRecommendedSize: number;
@@ -1573,6 +1619,10 @@ export interface PrivateMediaFileInfo {
      */
     hash: string;
     /**
+     * cryptographic digest of the media file
+     */
+    digest: string;
+    /**
      * virtual location of the media file, relative to the ``/media`` virtual page
      */
     path: string;
@@ -1615,10 +1665,6 @@ export interface PrivateMediaFileInfo {
      */
     textContent?: string | null;
     /**
-     * ID of the posting linked to the media
-     */
-    postingId?: string | null;
-    /**
      * list of media previews - downscaled versions of the media
      */
     previews?: MediaFilePreviewInfo[] | null;
@@ -1631,6 +1677,14 @@ export interface PrivateMediaFileInfo {
      * ``true`` if the media file is considered to be malware, ``false`` (default) otherwise
      */
     malware?: boolean | null;
+    /**
+     * media grant allowing access to the media
+     */
+    grant?: string | null;
+    /**
+     * grant expiration timestamp - the real time when the grant will not be valid anymore
+     */
+    grantExpiresAt?: number | null;
     /**
      * the supported operations and the corresponding principals
      */
@@ -2103,33 +2157,65 @@ export interface RemoteFeed {
 
 export interface RemoteMedia {
     /**
+     * name of the node the media file is located on
+     */
+    nodeName: string;
+    /**
      * ID of the media file
      */
-    id: string;
+    mediaId: string;
     /**
      * SHA-1 hash of the media file
      */
-    hash?: string | null;
+    hash: string;
     /**
      * cryptographic digest of the media file
      */
-    digest?: string | null;
+    digest: string;
     /**
      * MIME type of the media
      */
     mimeType: string;
     /**
+     * width of the media in pixels (``null``, if the media file is not an image or video)
+     */
+    width?: number | null;
+    /**
+     * height of the media in pixels (``null``, if the media file is not an image or video)
+     */
+    height?: number | null;
+    /**
+     * size of the media file in bytes
+     */
+    size: number;
+    /**
+     * title of the media file, may be used as an alternative to the file name
+     */
+    title?: string | null;
+    /**
      * ``true`` if the media cannot be displayed as an image or video and should be displayed as an attachment instead,
      * ``false`` (default) otherwise
      */
     attachment?: boolean | null;
+    /**
+     * ID of the lease
+     */
+    leaseId?: string | null;
 }
 
 export interface RemoteMediaInfo {
     /**
-     * ID of the media file
+     * ID of the remote media file object
      */
     id: string;
+    /**
+     * name of the node the media file is located on
+     */
+    nodeName: string;
+    /**
+     * ID of the media file on the node it is located on
+     */
+    mediaId: string;
     /**
      * SHA-1 hash of the media file
      */
@@ -2143,10 +2229,30 @@ export interface RemoteMediaInfo {
      */
     mimeType?: string | null;
     /**
+     * width of the media in pixels (``null``, if the media file is not an image or video)
+     */
+    width?: number | null;
+    /**
+     * height of the media in pixels (``null``, if the media file is not an image or video)
+     */
+    height?: number | null;
+    /**
+     * size of the media file in bytes
+     */
+    size?: number | null;
+    /**
+     * title of the media file, may be used as an alternative to the file name
+     */
+    title?: string | null;
+    /**
      * ``true`` if the media cannot be displayed as an image or video and should be displayed as an attachment instead,
      * ``false`` (default) otherwise
      */
     attachment?: boolean | null;
+    /**
+     * media grant allowing access to the media
+     */
+    grant?: string | null;
 }
 
 export interface RemotePosting {
@@ -2295,6 +2401,37 @@ export interface SearchCommentHeadingUpdate {
      * heading of the posting
      */
     heading: string;
+}
+
+export interface SearchCommentMediaUpdate {
+    /**
+     * ID of the posting
+     */
+    postingId: string;
+    /**
+     * ID of the comment
+     */
+    commentId: string;
+    /**
+     * ID of the media
+     */
+    mediaId: string;
+    /**
+     * name of the node where the media is originated from
+     */
+    remoteMediaNodeName: string;
+    /**
+     * ID of the media on the original node
+     */
+    remoteMediaId: string;
+    /**
+     * title of the media file, may be used as an alternative to the file name
+     */
+    title?: string | null;
+    /**
+     * text content of the media
+     */
+    textContent?: string | null;
 }
 
 export interface SearchCommentMediaTextUpdate {
@@ -2476,6 +2613,33 @@ export interface SearchPostingHeadingUpdate {
      * heading of the posting
      */
     heading: string;
+}
+
+export interface SearchPostingMediaUpdate {
+    /**
+     * ID of the posting
+     */
+    postingId: string;
+    /**
+     * ID of the media
+     */
+    mediaId: string;
+    /**
+     * name of the node where the media is originated from
+     */
+    remoteMediaNodeName: string;
+    /**
+     * ID of the media on the original node
+     */
+    remoteMediaId: string;
+    /**
+     * title of the media file, may be used as an alternative to the file name
+     */
+    title?: string | null;
+    /**
+     * text content of the media
+     */
+    textContent?: string | null;
 }
 
 export interface SearchPostingMediaTextUpdate {
@@ -3614,6 +3778,25 @@ export interface VerificationInfo {
     errorMessage?: string | null;
 }
 
+export interface VisitDetails {
+    /**
+     * ID of the visited posting
+     */
+    postingId: string;
+    /**
+     * ID of the visited comment
+     */
+    commentId?: string | null;
+    /**
+     * ID of the visited media
+     */
+    mediaId?: string | null;
+    /**
+     * page referrer
+     */
+    referrer?: string | null;
+}
+
 export interface WhoAmI {
     nodeName?: string | null;
     /**
@@ -3809,212 +3992,6 @@ export interface CommentMassAttributes {
     seniorRejectedReactions?: RejectedReactions | null;
 }
 
-export interface CommentRevisionInfoBase<B> {
-    id: string;
-    /**
-     * ID of the posting revision that was actual at the moment of creation of this comment revision
-     */
-    postingRevisionId: string;
-    /**
-     * preview of the revision's body, a string representation of a JSON structure
-     */
-    bodyPreview?: B | null;
-    /**
-     * hash of the source text of the revision
-     */
-    bodySrcHash: string;
-    /**
-     * format of the source text of the revision, the list of available formats is returned in ``PostingFeatures``
-     */
-    bodySrcFormat?: SourceFormat | null;
-    /**
-     * body of the revision, a string representation of a JSON structure
-     */
-    body: B;
-    /**
-     * format of the body of the revision, may have any value meaningful for the client
-     */
-    bodyFormat?: BodyFormat | null;
-    /**
-     * heading of the revision
-     */
-    heading: string;
-    /**
-     * in addition to ``heading``, gives a more detailed description of the revision that can be used for search
-     * engines and link previews
-     */
-    description?: string | null;
-    /**
-     * revision creation timestamp - the real time when the revision was created
-     */
-    createdAt: number;
-    /**
-     * revision deletion timestamp - the time when the revision was deleted
-     */
-    deletedAt?: number | null;
-    /**
-     * revision deletion timestamp - the time when the revision will be deleted and the previous revision will take its
-     * place
-     */
-    deadline?: number | null;
-    /**
-     * cryptographic digest of the revision (use ``Comment`` fingerprint)
-     */
-    digest?: string | null;
-    /**
-     * the comment's owner signature (use ``Comment`` fingerprint)
-     */
-    signature?: string | null;
-    /**
-     * signature version (i.e. fingerprint version)
-     */
-    signatureVersion?: number | null;
-    /**
-     * details of the existing reaction (if any) of the client's owner
-     */
-    clientReaction?: ClientReactionInfo | null;
-    /**
-     * summary of reactions to the revision
-     */
-    reactions?: ReactionTotalsInfo | null;
-}
-
-export type EncodedCommentRevisionInfo = CommentRevisionInfoBase<string>;
-export type CommentRevisionInfo = CommentRevisionInfoBase<Body>;
-
-export interface CommentSourceText {
-    /**
-     * avatar of the comment's owner
-     */
-    ownerAvatar?: AvatarDescription | null;
-    /**
-     * the source text of the comment, a string representation of a JSON structure
-     */
-    bodySrc?: Body | string | null;
-    /**
-     * format of the source text of the comment, ``plain-text`` by default; the list of available formats is returned
-     * in ``PostingFeatures``
-     */
-    bodySrcFormat?: SourceFormat | null;
-    /**
-     * array of IDs and digests of private media to be attached to the comment
-     */
-    media?: MediaWithDigest[] | null;
-    /**
-     * types of reactions that the comment rejects
-     */
-    rejectedReactions?: RejectedReactions | null;
-    /**
-     * types of reactions that the comment rejects, as defined by the posting's owner ("senior"); only the senior may
-     * set this
-     */
-    seniorRejectedReactions?: RejectedReactions | null;
-    /**
-     * ID of the comment this comment is replying to
-     */
-    repliedToId?: string | null;
-    /**
-     * the operations and the corresponding principals
-     */
-    operations?: CommentOperations | null;
-    /**
-     * the operations and the corresponding principals that are overridden in reactions to the comment
-     */
-    reactionOperations?: ReactionOperations | null;
-    /**
-     * the operations and the corresponding principals that are overridden by the posting's owner ("senior"); only the
-     * senior may set this
-     */
-    seniorOperations?: CommentOperations | null;
-}
-
-export interface CommentText {
-    /**
-     * node name of the comment's owner
-     */
-    ownerName?: string | null;
-    /**
-     * full name of the comment's owner
-     */
-    ownerFullName?: string | null;
-    /**
-     * gender of the comment's owner
-     */
-    ownerGender?: string | null;
-    /**
-     * avatar of the comment's owner
-     */
-    ownerAvatar?: AvatarDescription | null;
-    /**
-     * preview of the comment's body, a string representation of a JSON structure
-     */
-    bodyPreview?: Body | string | null;
-    /**
-     * the source text of the comment, a string representation of a JSON structure
-     */
-    bodySrc?: Body | string | null;
-    /**
-     * format of the source text of the comment, ``plain-text`` by default; the list of available formats is returned
-     * in ``PostingFeatures``
-     */
-    bodySrcFormat?: SourceFormat | null;
-    /**
-     * body of the comment, a string representation of a JSON structure
-     */
-    body?: Body | string | null;
-    /**
-     * format of the body of the comment, may have any value meaningful for the client
-     */
-    bodyFormat?: BodyFormat | null;
-    /**
-     * array of IDs of private media to be attached to the comment
-     */
-    media?: string[] | null;
-    /**
-     * comment creation timestamp - the real time when the comment was created
-     */
-    createdAt?: number | null;
-    /**
-     * types of reactions that the comment rejects
-     */
-    rejectedReactions?: RejectedReactions | null;
-    /**
-     * types of reactions that the comment rejects, as defined by the posting's owner ("senior"); only the senior may
-     * set this
-     */
-    seniorRejectedReactions?: RejectedReactions | null;
-    /**
-     * ID of the comment this comment is replying to
-     */
-    repliedToId?: string | null;
-    /**
-     * the comment's owner signature (use ``Comment`` fingerprint)
-     */
-    signature?: string | null;
-    /**
-     * signature version (i.e. fingerprint version)
-     */
-    signatureVersion?: number | null;
-    /**
-     * ``true``, if the comment is being be checked by the post's author before publication, ``false`` (default)
-     * otherwise; only the senior may set this
-     */
-    premoderating?: boolean | null;
-    /**
-     * the operations and the corresponding principals
-     */
-    operations?: CommentOperations | null;
-    /**
-     * the operations and the corresponding principals that are overridden in reactions to the comment
-     */
-    reactionOperations?: ReactionOperations | null;
-    /**
-     * the operations and the corresponding principals that are overridden by the posting's owner ("senior"); only the
-     * senior may set this
-     */
-    seniorOperations?: CommentOperations | null;
-}
-
 export interface ContactWithRelationships {
     /**
      * contact's details
@@ -4044,74 +4021,6 @@ export interface ContactWithRelationships {
      * information about blocking the node by the contact
      */
     blockedBy?: BlockedByUserInfo[] | null;
-}
-
-export interface DraftText {
-    /**
-     * type of the draft
-     */
-    draftType: DraftType;
-    /**
-     * name of the node the draft is related to
-     */
-    receiverName: string;
-    /**
-     * ID of the posting, mandatory for all types, except ``new-posting``
-     */
-    receiverPostingId?: string | null;
-    /**
-     * ID of the comment, mandatory for ``comment-update`` type
-     */
-    receiverCommentId?: string | null;
-    /**
-     * ID of the comment replied to
-     */
-    repliedToId?: string | null;
-    /**
-     * full name of the posting's/comment's owner
-     */
-    ownerFullName?: string | null;
-    /**
-     * avatar of the posting's/comment's owner
-     */
-    ownerAvatar?: AvatarDescription | null;
-    /**
-     * types of reactions that the posting rejects
-     */
-    rejectedReactions?: RejectedReactions | null;
-    /**
-     * types of reactions that the posting's comments should reject
-     */
-    commentRejectedReactions?: RejectedReactions | null;
-    /**
-     * the source text of the draft, a string representation of a JSON structure
-     */
-    bodySrc?: Body | string | null;
-    /**
-     * format of the source text of the draft, ``plain-text`` by default; the list of available formats is returned in
-     * ``PostingFeatures``
-     */
-    bodySrcFormat?: SourceFormat | null;
-    /**
-     * list of the media attached to the draft, the media may be located on another node
-     */
-    media?: RemoteMedia[] | null;
-    /**
-     * story publication timestamp - the time the story must be published under in the feed
-     */
-    publishAt?: number | null;
-    /**
-     * description of the update
-     */
-    updateInfo?: UpdateInfo | null;
-    /**
-     * draft of the list of operations and the corresponding principals
-     */
-    operations?: PostingOperations | null;
-    /**
-     * draft of the list of operations and the corresponding principals that are overridden in the posting's comments
-     */
-    commentOperations?: CommentOperations | null;
 }
 
 export interface Features {
@@ -4193,13 +4102,80 @@ export interface MediaAttachment {
      */
     media?: PrivateMediaFileInfo | null;
     /**
+     * (drafts only) ID of the lease of the local media to the target node
+     */
+    mediaLeaseId?: string | null;
+    /**
      * details of the media, if it is located on another node
      */
     remoteMedia?: RemoteMediaInfo | null;
     /**
+     * ID of the child posting linked to the attachment, if any
+     */
+    postingId?: string | null;
+    /**
      * ``true`` if the media is used in the body of the posting/comment, ``false`` otherwise
      */
     embedded: boolean;
+}
+
+export interface MediaCaptionBase<B> {
+    /**
+     * ID of the media file the caption belongs to
+     */
+    mediaId: string;
+    /**
+     * caption source text, a string representation of a JSON structure
+     */
+    captionSrc?: B | null;
+    /**
+     * format of the caption source text
+     */
+    captionSrcFormat?: SourceFormat | null;
+}
+
+export type EncodedMediaCaption = MediaCaptionBase<string>;
+export type MediaCaption = MediaCaptionBase<Body>;
+
+export interface MediaCaptionText {
+    /**
+     * ID of the media file the caption belongs to
+     */
+    mediaId: string;
+    /**
+     * caption source text, a string representation of a JSON structure
+     */
+    captionSrc?: Body | string | null;
+    /**
+     * format of the caption source text
+     */
+    captionSrcFormat?: SourceFormat | null;
+}
+
+export interface MediaLeaseInfo {
+    /**
+     * ID of the lease
+     */
+    id: string;
+    /**
+     * details of the media
+     */
+    media: PrivateMediaFileInfo;
+}
+
+export interface MediaToAttach {
+    /**
+     * ID of the local media to attach
+     */
+    localMediaId?: string | null;
+    /**
+     * (drafts only) ID of the lease of the local media to the target node
+     */
+    localMediaLeaseId?: string | null;
+    /**
+     * remote media to attach
+     */
+    remoteMedia?: RemoteMedia | null;
 }
 
 export interface PostingInfoBase<B> {
@@ -4237,9 +4213,9 @@ export interface PostingInfoBase<B> {
      */
     receiverPostingId?: string | null;
     /**
-     * ID of the media the posting is linked to, if any
+     * information about the media the posting is linked to, if any
      */
-    parentMediaId?: string | null;
+    parentMedia?: ParentMediaInfo | null;
     /**
      * node name of the posting's owner
      */
@@ -4415,6 +4391,10 @@ export interface PostingInfoBase<B> {
      */
     totalComments?: number | null;
     /**
+     * number of posting views (for admin only)
+     */
+    viewCount?: number | null;
+    /**
      * ``true``, if the posting was recommended by a recommendation service (for cached copies of remote postings
      * only), ``false`` otherwise
      */
@@ -4528,9 +4508,13 @@ export interface PostingSourceText {
      */
     bodySrcFormat?: SourceFormat | null;
     /**
-     * array of IDs and digests of private media to be attached to the posting
+     * array of media to be attached to the posting
      */
-    media?: MediaWithDigest[] | null;
+    media?: MediaToAttach[] | null;
+    /**
+     * captions of the media to be attached to the posting
+     */
+    mediaCaptions?: MediaCaptionText[] | null;
     /**
      * types of reactions that the posting rejects
      */
@@ -4596,9 +4580,9 @@ export interface PostingText {
      */
     bodyFormat?: BodyFormat | null;
     /**
-     * array of IDs of private media to be attached to the posting
+     * array of media to be attached to the posting
      */
-    media?: string[] | null;
+    media?: MediaToAttach[] | null;
     /**
      * posting creation timestamp - the real time when the posting was created
      */
@@ -4714,6 +4698,11 @@ export interface SearchEntryInfoBase<B> {
      * preview of the media attached to the entry, if any
      */
     mediaPreview?: PublicMediaFileInfo | null;
+    /**
+     * Source node of the media attached to the entry that was chosen for the preview (``null``, if the media is
+     * located on the same node as the entry)
+     */
+    mediaPreviewNodeName?: string | null;
     /**
      * ID of the media attached to the entry that was chosen for the preview
      */
@@ -5051,6 +5040,83 @@ export interface CommentInfoBase<B> {
 export type EncodedCommentInfo = CommentInfoBase<string>;
 export type CommentInfo = CommentInfoBase<Body>;
 
+export interface CommentRevisionInfoBase<B> {
+    id: string;
+    /**
+     * ID of the posting revision that was actual at the moment of creation of this comment revision
+     */
+    postingRevisionId: string;
+    /**
+     * preview of the revision's body, a string representation of a JSON structure
+     */
+    bodyPreview?: B | null;
+    /**
+     * hash of the source text of the revision
+     */
+    bodySrcHash: string;
+    /**
+     * format of the source text of the revision, the list of available formats is returned in ``PostingFeatures``
+     */
+    bodySrcFormat?: SourceFormat | null;
+    /**
+     * body of the revision, a string representation of a JSON structure
+     */
+    body: B;
+    /**
+     * format of the body of the revision, may have any value meaningful for the client
+     */
+    bodyFormat?: BodyFormat | null;
+    /**
+     * list of the media attached to the revision
+     */
+    media?: MediaAttachment[] | null;
+    /**
+     * heading of the revision
+     */
+    heading: string;
+    /**
+     * in addition to ``heading``, gives a more detailed description of the revision that can be used for search
+     * engines and link previews
+     */
+    description?: string | null;
+    /**
+     * revision creation timestamp - the real time when the revision was created
+     */
+    createdAt: number;
+    /**
+     * revision deletion timestamp - the time when the revision was deleted
+     */
+    deletedAt?: number | null;
+    /**
+     * revision deletion timestamp - the time when the revision will be deleted and the previous revision will take its
+     * place
+     */
+    deadline?: number | null;
+    /**
+     * cryptographic digest of the revision (use ``Comment`` fingerprint)
+     */
+    digest?: string | null;
+    /**
+     * the comment's owner signature (use ``Comment`` fingerprint)
+     */
+    signature?: string | null;
+    /**
+     * signature version (i.e. fingerprint version)
+     */
+    signatureVersion?: number | null;
+    /**
+     * details of the existing reaction (if any) of the client's owner
+     */
+    clientReaction?: ClientReactionInfo | null;
+    /**
+     * summary of reactions to the revision
+     */
+    reactions?: ReactionTotalsInfo | null;
+}
+
+export type EncodedCommentRevisionInfo = CommentRevisionInfoBase<string>;
+export type CommentRevisionInfo = CommentRevisionInfoBase<Body>;
+
 export interface CommentsSliceInfoBase<B> {
     /**
      * the slice contains all comments before this moment, inclusive. May be the far future.
@@ -5080,6 +5146,143 @@ export interface CommentsSliceInfoBase<B> {
 
 export type EncodedCommentsSliceInfo = CommentsSliceInfoBase<string>;
 export type CommentsSliceInfo = CommentsSliceInfoBase<Body>;
+
+export interface CommentSourceText {
+    /**
+     * avatar of the comment's owner
+     */
+    ownerAvatar?: AvatarDescription | null;
+    /**
+     * the source text of the comment, a string representation of a JSON structure
+     */
+    bodySrc?: Body | string | null;
+    /**
+     * format of the source text of the comment, ``plain-text`` by default; the list of available formats is returned
+     * in ``PostingFeatures``
+     */
+    bodySrcFormat?: SourceFormat | null;
+    /**
+     * array of media to be attached to the comment
+     */
+    media?: MediaToAttach[] | null;
+    /**
+     * captions of the media to be attached to the comment
+     */
+    mediaCaptions?: MediaCaptionText[] | null;
+    /**
+     * types of reactions that the comment rejects
+     */
+    rejectedReactions?: RejectedReactions | null;
+    /**
+     * types of reactions that the comment rejects, as defined by the posting's owner ("senior"); only the senior may
+     * set this
+     */
+    seniorRejectedReactions?: RejectedReactions | null;
+    /**
+     * ID of the comment this comment is replying to
+     */
+    repliedToId?: string | null;
+    /**
+     * the operations and the corresponding principals
+     */
+    operations?: CommentOperations | null;
+    /**
+     * the operations and the corresponding principals that are overridden in reactions to the comment
+     */
+    reactionOperations?: ReactionOperations | null;
+    /**
+     * the operations and the corresponding principals that are overridden by the posting's owner ("senior"); only the
+     * senior may set this
+     */
+    seniorOperations?: CommentOperations | null;
+}
+
+export interface CommentText {
+    /**
+     * node name of the comment's owner
+     */
+    ownerName?: string | null;
+    /**
+     * full name of the comment's owner
+     */
+    ownerFullName?: string | null;
+    /**
+     * gender of the comment's owner
+     */
+    ownerGender?: string | null;
+    /**
+     * avatar of the comment's owner
+     */
+    ownerAvatar?: AvatarDescription | null;
+    /**
+     * preview of the comment's body, a string representation of a JSON structure
+     */
+    bodyPreview?: Body | string | null;
+    /**
+     * the source text of the comment, a string representation of a JSON structure
+     */
+    bodySrc?: Body | string | null;
+    /**
+     * format of the source text of the comment, ``plain-text`` by default; the list of available formats is returned
+     * in ``PostingFeatures``
+     */
+    bodySrcFormat?: SourceFormat | null;
+    /**
+     * body of the comment, a string representation of a JSON structure
+     */
+    body?: Body | string | null;
+    /**
+     * format of the body of the comment, may have any value meaningful for the client
+     */
+    bodyFormat?: BodyFormat | null;
+    /**
+     * array of IDs of private media to be attached to the comment
+     */
+    media?: MediaToAttach[] | null;
+    /**
+     * comment creation timestamp - the real time when the comment was created
+     */
+    createdAt?: number | null;
+    /**
+     * types of reactions that the comment rejects
+     */
+    rejectedReactions?: RejectedReactions | null;
+    /**
+     * types of reactions that the comment rejects, as defined by the posting's owner ("senior"); only the senior may
+     * set this
+     */
+    seniorRejectedReactions?: RejectedReactions | null;
+    /**
+     * ID of the comment this comment is replying to
+     */
+    repliedToId?: string | null;
+    /**
+     * the comment's owner signature (use ``Comment`` fingerprint)
+     */
+    signature?: string | null;
+    /**
+     * signature version (i.e. fingerprint version)
+     */
+    signatureVersion?: number | null;
+    /**
+     * ``true``, if the comment is being be checked by the post's author before publication, ``false`` (default)
+     * otherwise; only the senior may set this
+     */
+    premoderating?: boolean | null;
+    /**
+     * the operations and the corresponding principals
+     */
+    operations?: CommentOperations | null;
+    /**
+     * the operations and the corresponding principals that are overridden in reactions to the comment
+     */
+    reactionOperations?: ReactionOperations | null;
+    /**
+     * the operations and the corresponding principals that are overridden by the posting's owner ("senior"); only the
+     * senior may set this
+     */
+    seniorOperations?: CommentOperations | null;
+}
 
 export interface DraftInfoBase<B> {
     id: string;
@@ -5153,6 +5356,10 @@ export interface DraftInfoBase<B> {
      */
     media?: MediaAttachment[] | null;
     /**
+     * captions of the media attached to the draft
+     */
+    mediaCaptions?: MediaCaptionBase<B>[] | null;
+    /**
      * heading of the draft
      */
     heading: string;
@@ -5178,19 +5385,77 @@ export interface DraftInfoBase<B> {
 export type EncodedDraftInfo = DraftInfoBase<string>;
 export type DraftInfo = DraftInfoBase<Body>;
 
-export interface EntryInfoBase<B> {
+export interface DraftText {
     /**
-     * posting details, set if the entry is a posting
+     * type of the draft
      */
-    posting?: PostingInfoBase<B> | null;
+    draftType: DraftType;
     /**
-     * comment details, set if the entry is a comment
+     * name of the node the draft is related to
      */
-    comment?: CommentInfoBase<B> | null;
+    receiverName: string;
+    /**
+     * ID of the posting, mandatory for all types, except ``new-posting``
+     */
+    receiverPostingId?: string | null;
+    /**
+     * ID of the comment, mandatory for ``comment-update`` type
+     */
+    receiverCommentId?: string | null;
+    /**
+     * ID of the comment replied to
+     */
+    repliedToId?: string | null;
+    /**
+     * full name of the posting's/comment's owner
+     */
+    ownerFullName?: string | null;
+    /**
+     * avatar of the posting's/comment's owner
+     */
+    ownerAvatar?: AvatarDescription | null;
+    /**
+     * types of reactions that the posting rejects
+     */
+    rejectedReactions?: RejectedReactions | null;
+    /**
+     * types of reactions that the posting's comments should reject
+     */
+    commentRejectedReactions?: RejectedReactions | null;
+    /**
+     * the source text of the draft, a string representation of a JSON structure
+     */
+    bodySrc?: Body | string | null;
+    /**
+     * format of the source text of the draft, ``plain-text`` by default; the list of available formats is returned in
+     * ``PostingFeatures``
+     */
+    bodySrcFormat?: SourceFormat | null;
+    /**
+     * list of the media attached to the draft
+     */
+    media?: MediaToAttach[] | null;
+    /**
+     * captions of the media attached to the draft
+     */
+    mediaCaptions?: MediaCaptionText[] | null;
+    /**
+     * story publication timestamp - the time the story must be published under in the feed
+     */
+    publishAt?: number | null;
+    /**
+     * description of the update
+     */
+    updateInfo?: UpdateInfo | null;
+    /**
+     * draft of the list of operations and the corresponding principals
+     */
+    operations?: PostingOperations | null;
+    /**
+     * draft of the list of operations and the corresponding principals that are overridden in the posting's comments
+     */
+    commentOperations?: CommentOperations | null;
 }
-
-export type EncodedEntryInfo = EntryInfoBase<string>;
-export type EntryInfo = EntryInfoBase<Body>;
 
 export interface SettingDescriptor {
     /**
