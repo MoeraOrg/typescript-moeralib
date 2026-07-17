@@ -1291,16 +1291,41 @@ export class MoeraNode extends Caller {
     }
 
     /**
-     * Upload a new private media file. The content of the file is passed in the request body.
+     * Parse the page located at the URL and return the title, the description and the picture that may be used to
+     * build a preview of the page.
      *
-     * @param {Buffer} body
-     * @param {string} contentType - content-type of ``body``
+     * @param {string} url
+     * @return {Promise<API.LinkPreviewInfo>}
+     */
+    async createLinkPreview(url: string): Promise<API.LinkPreviewInfo> {
+        const location = ut`/link-preview`;
+        const params = {url};
+        return await this.call("createLinkPreview", location, {
+            method: "GET", params, schema: "LinkPreviewInfo"
+        }) as API.LinkPreviewInfo;
+    }
+
+    /**
+     * Upload a new private media file. The content of the file is passed in the request body. Alternatively, the file
+     * can be uploaded using Media upload API and its ID passed in the `upload` query parameter. The second alternative
+     * is to pass the URL of the media in the `url` query parameter, the media will be downloaded to the node.
+     *
+     * @param {string | null} upload - ID of the media upload to be used instead of the request body
+     * @param {string | null} url - URL of the media to be used instead of the request body
+     * @param {boolean | null} downsize - `true` to scale the uploaded image down to the size recommended by the node,
+     * if possible; the default is `false`
+     * @param {Buffer | null} body - optional
+     * @param {string | null} contentType - optional content-type of ``body``
      * @return {Promise<API.PrivateMediaFileInfo>}
      */
-    async uploadPrivateMedia(body: Buffer, contentType: string): Promise<API.PrivateMediaFileInfo> {
-        const location = "/media/private";
+    async uploadPrivateMedia(
+        body: Buffer | null = null, contentType: string | null = null, upload: string | null = null,
+        url: string | null = null, downsize: boolean | null = null
+    ): Promise<API.PrivateMediaFileInfo> {
+        const location = ut`/media/private`;
+        const params = {upload, url, downsize};
         return await this.call("uploadPrivateMedia", location, {
-            method: "POST", body, contentType, schema: "PrivateMediaFileInfo"
+            method: "POST", params, body, contentType, schema: "PrivateMediaFileInfo"
         }) as API.PrivateMediaFileInfo;
     }
 
@@ -1426,6 +1451,63 @@ export class MoeraNode extends Caller {
     async deleteMediaLease(id: string): Promise<API.Result> {
         const location = ut`/media/leases/${id}`;
         return await this.call("deleteMediaLease", location, {
+            method: "DELETE", schema: "Result"
+        }) as API.Result;
+    }
+
+    /**
+     * Create a new chunked upload of a private media source file.
+     *
+     * @param {API.MediaUploadAttributes} attributes
+     * @return {Promise<API.MediaUploadInfo>}
+     */
+    async createMediaUpload(attributes: API.MediaUploadAttributes): Promise<API.MediaUploadInfo> {
+        const location = "/media/upload";
+        return await this.call("createMediaUpload", location, {
+            method: "POST", body: attributes, schema: "MediaUploadInfo"
+        }) as API.MediaUploadInfo;
+    }
+
+    /**
+     * Get chunked upload details.
+     *
+     * @param {string} id - upload ID
+     * @return {Promise<API.MediaUploadInfo>}
+     */
+    async getMediaUpload(id: string): Promise<API.MediaUploadInfo> {
+        const location = ut`/media/upload/${id}`;
+        return await this.call("getMediaUpload", location, {
+            method: "GET", schema: "MediaUploadInfo"
+        }) as API.MediaUploadInfo;
+    }
+
+    /**
+     * Upload one chunk of a private media source file.
+     *
+     * @param {string} id - upload ID
+     * @param {number} chunk - zero-based chunk number
+     * @param {Buffer} body
+     * @param {string} contentType - content-type of ``body``
+     * @return {Promise<API.MediaUploadInfo>}
+     */
+    async uploadMediaChunk(
+        id: string, chunk: number, body: Buffer, contentType: string
+    ): Promise<API.MediaUploadInfo> {
+        const location = ut`/media/upload/${id}/${chunk}`;
+        return await this.call("uploadMediaChunk", location, {
+            method: "PUT", body, contentType, schema: "MediaUploadInfo"
+        }) as API.MediaUploadInfo;
+    }
+
+    /**
+     * Delete a chunked media upload and the corresponding source file.
+     *
+     * @param {string} id - upload ID
+     * @return {Promise<API.Result>}
+     */
+    async deleteMediaUpload(id: string): Promise<API.Result> {
+        const location = ut`/media/upload/${id}`;
+        return await this.call("deleteMediaUpload", location, {
             method: "DELETE", schema: "Result"
         }) as API.Result;
     }
@@ -1950,35 +2032,6 @@ export class MoeraNode extends Caller {
         return await this.call("cancelDeleteNodeRequest", location, {
             method: "DELETE", schema: "DeleteNodeStatus"
         }) as API.DeleteNodeStatus;
-    }
-
-    /**
-     * Open the URL passed in the parameters and pass to the client the media file returned by the server.
-     *
-     * @param {string} url
-     * @return {Promise<Blob>}
-     */
-    async proxyMedia(url: string): Promise<Blob> {
-        const location = ut`/proxy/media`;
-        const params = {url};
-        return await this.call("proxyMedia", location, {
-            method: "GET", params, schema: "blob"
-        }) as Blob;
-    }
-
-    /**
-     * Parse the page located at the URL and return the title, the description and the picture that may be used to
-     * build a preview of the page.
-     *
-     * @param {string} url
-     * @return {Promise<API.LinkPreviewInfo>}
-     */
-    async proxyLinkPreview(url: string): Promise<API.LinkPreviewInfo> {
-        const location = ut`/proxy/link-preview`;
-        const params = {url};
-        return await this.call("proxyLinkPreview", location, {
-            method: "GET", params, schema: "LinkPreviewInfo"
-        }) as API.LinkPreviewInfo;
     }
 
     /**
@@ -3012,6 +3065,53 @@ export class MoeraNode extends Caller {
     async deleteUserListItem(name: string, remoteNodeName: string): Promise<API.Result> {
         const location = ut`/user-lists/${name}/items/${remoteNodeName}`;
         return await this.call("deleteUserListItem", location, {
+            method: "DELETE", schema: "Result"
+        }) as API.Result;
+    }
+
+    /**
+     * Search for visited nodes matching the search ``query``. Every space-delimited word in the query must match
+     * case-insensitively a beginning of the node's name or a beginning of any space-delimited word in the node's full
+     * name. The order of words is not significant. \
+     * \
+     * The node may decide to return fewer nodes than the given ``limit``. \
+     * \
+     * The nodes are sorted by *social distance* from the node.
+     *
+     * @param {string | null} query - the search query
+     * @param {number | null} limit - maximum number of nodes returned
+     * @return {Promise<API.SearchNodeInfo[]>}
+     */
+    async getVisitedNodes(query: string | null = null, limit: number | null = null): Promise<API.SearchNodeInfo[]> {
+        const location = ut`/people/visited`;
+        const params = {query, limit};
+        return await this.call("getVisitedNodes", location, {
+            method: "GET", params, schema: "SearchNodeInfoArray"
+        }) as API.SearchNodeInfo[];
+    }
+
+    /**
+     * Record a visit to the node.
+     *
+     * @param {API.VisitedNodeAttributes} node
+     * @return {Promise<API.Result>}
+     */
+    async recordVisitedNode(node: API.VisitedNodeAttributes): Promise<API.Result> {
+        const location = "/people/visited";
+        return await this.call("recordVisitedNode", location, {
+            method: "POST", body: node, schema: "Result"
+        }) as API.Result;
+    }
+
+    /**
+     * Delete all visits to the node.
+     *
+     * @param {string} remoteNodeName - name of the visited node
+     * @return {Promise<API.Result>}
+     */
+    async deleteVisitedNode(remoteNodeName: string): Promise<API.Result> {
+        const location = ut`/people/visited/${remoteNodeName}`;
+        return await this.call("deleteVisitedNode", location, {
             method: "DELETE", schema: "Result"
         }) as API.Result;
     }

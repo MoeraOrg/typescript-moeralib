@@ -731,6 +731,10 @@ export const NODE_API_SCHEMAS = {
                     type: "string",
                     nullable: true
                 },
+                "title": {
+                    type: "string",
+                    nullable: true
+                },
                 "avatar": {
                     anyOf: [
                         {
@@ -1281,37 +1285,6 @@ export const NODE_API_SCHEMAS = {
             additionalProperties: false
         },
 
-        LinkPreviewInfo: {
-            type: "object",
-            properties: {
-                "siteName": {
-                    type: "string",
-                    nullable: true
-                },
-                "url": {
-                    type: "string",
-                    nullable: true
-                },
-                "title": {
-                    type: "string",
-                    nullable: true
-                },
-                "description": {
-                    type: "string",
-                    nullable: true
-                },
-                "imageUrl": {
-                    type: "string",
-                    nullable: true
-                },
-                "publishedAt": {
-                    type: "integer",
-                    nullable: true
-                },
-            },
-            additionalProperties: false
-        },
-
         MediaFilePreviewInfo: {
             type: "object",
             properties: {
@@ -1353,6 +1326,50 @@ export const NODE_API_SCHEMAS = {
                 "mimeType",
                 "width",
                 "height",
+            ],
+            additionalProperties: false
+        },
+
+        MediaUploadInfo: {
+            type: "object",
+            properties: {
+                "id": {
+                    type: "string"
+                },
+                "mimeType": {
+                    type: "string",
+                    nullable: true
+                },
+                "title": {
+                    type: "string",
+                    nullable: true
+                },
+                "fileSize": {
+                    type: "integer"
+                },
+                "chunkSize": {
+                    type: "integer"
+                },
+                "uploadedChunks": {
+                    type: "array",
+                    items: {
+                        type: "integer"
+                    }
+                },
+                "deadline": {
+                    type: "integer"
+                },
+                "completedAt": {
+                    type: "integer",
+                    nullable: true
+                },
+            },
+            required: [
+                "id",
+                "fileSize",
+                "chunkSize",
+                "uploadedChunks",
+                "deadline",
             ],
             additionalProperties: false
         },
@@ -1489,12 +1506,6 @@ export const NODE_API_SCHEMAS = {
                         type: "string"
                     }
                 },
-                "imageRecommendedSize": {
-                    type: "integer"
-                },
-                "imageRecommendedPixels": {
-                    type: "integer"
-                },
                 "imageFormats": {
                     type: "array",
                     items: {
@@ -1505,8 +1516,6 @@ export const NODE_API_SCHEMAS = {
             required: [
                 "subjectPresent",
                 "sourceFormats",
-                "imageRecommendedSize",
-                "imageRecommendedPixels",
                 "imageFormats",
             ],
             additionalProperties: false
@@ -3796,6 +3805,45 @@ export const NODE_API_SCHEMAS = {
             items: {
                 $ref: "node#/definitions/FeedInfo"
             }
+        },
+
+        LinkPreviewInfo: {
+            type: "object",
+            properties: {
+                "siteName": {
+                    type: "string",
+                    nullable: true
+                },
+                "url": {
+                    type: "string",
+                    nullable: true
+                },
+                "title": {
+                    type: "string",
+                    nullable: true
+                },
+                "description": {
+                    type: "string",
+                    nullable: true
+                },
+                "image": {
+                    anyOf: [
+                        {
+                            $ref: "node#/definitions/PrivateMediaFileInfo",
+                            type: "object",
+                            nullable: true
+                        },
+                        {
+                            type: "null"
+                        }
+                    ]
+                },
+                "publishedAt": {
+                    type: "integer",
+                    nullable: true
+                },
+            },
+            additionalProperties: false
         },
 
         MediaAttachment: {

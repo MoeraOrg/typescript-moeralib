@@ -180,6 +180,7 @@ def generate_operations(operations: Any, tfile: TextIO, sfile: TextIO) -> None:
 JS_TYPES = {
     'String': 'string',
     'String[]': 'string[]',
+    'int[]': 'number[]',
     'short': 'number',
     'int': 'number',
     'long': 'number',
@@ -203,6 +204,7 @@ def to_js_type(api_type: str) -> str:
 SCHEMA_TYPES = {
     'String': ('string', False),
     'String[]': ('string', True),
+    'int[]': ('integer', True),
     'short': ('integer', False),
     'int': ('integer', False),
     'long': ('integer', False),
@@ -521,8 +523,15 @@ def generate_calls(api: Any, structs: dict[str, Structure], afile: TextIO) -> No
                               .format(type=request['in']['type'], method=request['type'], url=request['url']))
                         exit(1)
                     body = ', body, contentType'
-                    params += ['body: Buffer', 'contentType: string']
-                    param_docs += [('body', '', 'Buffer'), ('contentType', 'content-type of ``body``', 'string')]
+                    if request['in'].get('optional', False):
+                        params += ['body: Buffer | null = null', 'contentType: string | null = null']
+                        param_docs += [
+                            ('body', 'optional', 'Buffer | null'),
+                            ('contentType', 'optional content-type of ``body``', 'string | null')
+                        ]
+                    else:
+                        params += ['body: Buffer', 'contentType: string']
+                        param_docs += [('body', '', 'Buffer'), ('contentType', 'content-type of ``body``', 'string')]
                 else:
                     if 'name' not in request['in']:
                         print('Missing name of body of the request "{method} {url}"'
@@ -536,8 +545,12 @@ def generate_calls(api: Any, structs: dict[str, Structure], afile: TextIO) -> No
                     if request['in'].get('array', False):
                         js_type += '[]'
                     body = f', body: {name}'
-                    params.append(f'{name}: {js_type}')
-                    param_docs += [(name, request['in'].get('description', ''), js_type)]
+                    if request['in'].get('optional', False):
+                        params.append(f'{name}: {js_type} | null = null')
+                        param_docs += [(name, request['in'].get('description', ''), f'{js_type} | null')]
+                    else:
+                        params.append(f'{name}: {js_type}')
+                        param_docs += [(name, request['in'].get('description', ''), js_type)]
             params += tail_params
 
             method = request['type']

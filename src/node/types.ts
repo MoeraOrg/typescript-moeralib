@@ -886,6 +886,7 @@ export interface ContactInfo {
     nodeName: string;
     fullName?: string | null;
     gender?: string | null;
+    title?: string | null;
     avatar?: AvatarImage | null;
     /**
      * social distance between the contact and the node, which depends on subscription and friendship status and the
@@ -928,6 +929,13 @@ export interface ContactInfo {
      * the operations and the corresponding principals that are overridden by the node administrator
      */
     adminOperations?: ContactOperations | null;
+}
+
+export interface VisitedNodeAttributes {
+    /**
+     * name of the visited node
+     */
+    nodeName: string;
 }
 
 export interface Credentials {
@@ -1279,33 +1287,6 @@ export interface LinkPreview {
     publishedAt?: number | null;
 }
 
-export interface LinkPreviewInfo {
-    /**
-     * name of the site
-     */
-    siteName?: string | null;
-    /**
-     * canonical URL of the page
-     */
-    url?: string | null;
-    /**
-     * title of the page
-     */
-    title?: string | null;
-    /**
-     * description of the page
-     */
-    description?: string | null;
-    /**
-     * URL of the image presenting the page
-     */
-    imageUrl?: string | null;
-    /**
-     * timestamp of the page publication time
-     */
-    publishedAt?: number | null;
-}
-
 export interface MediaDownloadAttributes {
     /**
      * media grant allowing access to the media
@@ -1370,6 +1351,60 @@ export interface MediaLeaseAttributes {
      * ID of the comment used to verify access to the media file
      */
     commentId?: string | null;
+}
+
+export interface MediaUploadAttributes {
+    /**
+     * MIME type of the media source file
+     */
+    mimeType: string;
+    /**
+     * title of the media file, may be used as an alternative to the file name
+     */
+    title?: string | null;
+    /**
+     * full file size in bytes
+     */
+    fileSize: number;
+    /**
+     * client-proposed chunk size in bytes
+     */
+    chunkSize?: number | null;
+}
+
+export interface MediaUploadInfo {
+    /**
+     * upload ID
+     */
+    id: string;
+    /**
+     * MIME type of the media source file
+     */
+    mimeType?: string | null;
+    /**
+     * title of the media file, may be used as an alternative to the file name
+     */
+    title?: string | null;
+    /**
+     * full file size in bytes
+     */
+    fileSize: number;
+    /**
+     * chunk size in bytes
+     */
+    chunkSize: number;
+    /**
+     * zero-based numbers of uploaded chunks, sorted in natural order
+     */
+    uploadedChunks: number[];
+    /**
+     * upload expiration timestamp - the real time when the upload may be deleted
+     */
+    deadline: number;
+    /**
+     * upload completion timestamp - the real time when all chunks were uploaded
+     */
+    completedAt?: number | null;
 }
 
 export interface NameToRegister {
@@ -1561,14 +1596,6 @@ export interface PostingFeatures {
      * list of source text formats the node understands
      */
     sourceFormats: SourceFormat[];
-    /**
-     * maximal size of a compressed image in a post
-     */
-    imageRecommendedSize: number;
-    /**
-     * maximal resolution of a compressed image in a post (in pixels)
-     */
-    imageRecommendedPixels: number;
     /**
      * list of image formats (in MIME type form) the node understands
      */
@@ -4094,6 +4121,33 @@ export interface FriendDescription {
      * groups of friends the node is to be included into
      */
     groups?: FriendGroupAssignment[] | null;
+}
+
+export interface LinkPreviewInfo {
+    /**
+     * name of the site
+     */
+    siteName?: string | null;
+    /**
+     * canonical URL of the page
+     */
+    url?: string | null;
+    /**
+     * title of the page
+     */
+    title?: string | null;
+    /**
+     * description of the page
+     */
+    description?: string | null;
+    /**
+     * image presenting the page
+     */
+    image?: PrivateMediaFileInfo | null;
+    /**
+     * timestamp of the page publication time
+     */
+    publishedAt?: number | null;
 }
 
 export interface MediaAttachment {
