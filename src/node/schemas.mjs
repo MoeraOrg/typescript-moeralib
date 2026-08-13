@@ -1512,11 +1512,18 @@ export const NODE_API_SCHEMAS = {
                         type: "string"
                     }
                 },
+                "videoFormats": {
+                    type: "array",
+                    items: {
+                        type: "string"
+                    }
+                },
             },
             required: [
                 "subjectPresent",
                 "sourceFormats",
                 "imageFormats",
+                "videoFormats",
             ],
             additionalProperties: false
         },
@@ -1585,6 +1592,14 @@ export const NODE_API_SCHEMAS = {
                     type: "integer",
                     nullable: true
                 },
+                "directDownloadPath": {
+                    type: "string",
+                    nullable: true
+                },
+                "directDownloadPathExpiresAt": {
+                    type: "integer",
+                    nullable: true
+                },
                 "mimeType": {
                     type: "string"
                 },
@@ -1602,6 +1617,18 @@ export const NODE_API_SCHEMAS = {
                 },
                 "size": {
                     type: "integer"
+                },
+                "duration": {
+                    type: "number",
+                    nullable: true
+                },
+                "uncompressed": {
+                    type: "boolean",
+                    nullable: true
+                },
+                "compressedMediaId": {
+                    type: "string",
+                    nullable: true
                 },
                 "title": {
                     type: "string",
@@ -2182,7 +2209,15 @@ export const NODE_API_SCHEMAS = {
                     type: "integer",
                     nullable: true
                 },
+                "duration": {
+                    type: "number",
+                    nullable: true
+                },
                 "title": {
+                    type: "string",
+                    nullable: true
+                },
+                "textContent": {
                     type: "string",
                     nullable: true
                 },
@@ -4516,6 +4551,10 @@ export const NODE_API_SCHEMAS = {
                     nullable: true
                 },
                 "mediaPreviewId": {
+                    type: "string",
+                    nullable: true
+                },
+                "mediaPreviewMimeType": {
                     type: "string",
                     nullable: true
                 },

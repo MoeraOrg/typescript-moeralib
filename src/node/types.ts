@@ -102,7 +102,7 @@ export type StoryType = "asked-to-friend" | "asked-to-subscribe" | "blocked-user
     | "reaction-added-positive" | "reminder-avatar" | "reminder-email" | "reminder-full-name" | "reminder-sheriff-allow"
     | "remote-comment-added" | "reply-comment" | "search-report" | "sheriff-complaint-added"
     | "sheriff-complaint-decided" | "sheriff-marked" | "sheriff-unmarked" | "subscriber-added" | "subscriber-deleted"
-    | "unblocked-user" | "unblocked-user-in-posting";
+    | "unblocked-user" | "unblocked-user-in-posting" | "video-comment-published" | "video-posting-published";
 
 export type SubscriptionReason = "user" | "mention" | "comment" | "auto";
 
@@ -488,8 +488,8 @@ export interface AvatarImage {
      */
     path: string;
     /**
-     * location of the media file, relative to the ``/media``; points to a static image served directly from a
-     * filesystem or CDN
+     * location of the media file, relative to the ``/media`` or an absolute URL; points to a static image served
+     * directly from a filesystem or CDN
      */
     directPath?: string | null;
     /**
@@ -528,8 +528,8 @@ export interface AvatarInfo {
      */
     path: string;
     /**
-     * location of the media file, relative to the ``/media``; points to a static image served directly from a
-     * filesystem or CDN
+     * location of the media file, relative to the ``/media`` or an absolute URL; points to a static image served
+     * directly from a filesystem or CDN
      */
     directPath?: string | null;
     /**
@@ -931,13 +931,6 @@ export interface ContactInfo {
     adminOperations?: ContactOperations | null;
 }
 
-export interface VisitedNodeAttributes {
-    /**
-     * name of the visited node
-     */
-    nodeName: string;
-}
-
 export interface Credentials {
     login: string;
     password: string;
@@ -1308,8 +1301,8 @@ export interface MediaFilePreviewInfo {
      */
     path: string;
     /**
-     * location of the preview, relative to the ``/media``; points to a static image served directly from a filesystem
-     * or CDN
+     * location of the preview, relative to the ``/media`` or an absolute URL; points to a static image served directly
+     * from a filesystem or CDN
      */
     directPath?: string | null;
     /**
@@ -1600,6 +1593,10 @@ export interface PostingFeatures {
      * list of image formats (in MIME type form) the node understands
      */
     imageFormats: string[];
+    /**
+     * list of video formats (in MIME type form) the node understands
+     */
+    videoFormats: string[];
 }
 
 export interface PostingSourceInfo {
@@ -1654,14 +1651,24 @@ export interface PrivateMediaFileInfo {
      */
     path: string;
     /**
-     * location of the media file, relative to the ``/media``; points to a static image served directly from a
-     * filesystem or CDN
+     * location of the media file, relative to the ``/media`` or an absolute URL; points to the media served directly
+     * from a filesystem or CDN
      */
     directPath?: string | null;
     /**
      * direct path expiration timestamp - the real time when the direct path will not be valid anymore
      */
     directPathExpiresAt?: number | null;
+    /**
+     * location of the original media file with attachment content disposition, relative to the ``/media`` or an
+     * absolute URL
+     */
+    directDownloadPath?: string | null;
+    /**
+     * direct download path expiration timestamp - the real time when the direct download path will not be valid
+     * anymore
+     */
+    directDownloadPathExpiresAt?: number | null;
     /**
      * MIME type of the media
      */
@@ -1683,6 +1690,18 @@ export interface PrivateMediaFileInfo {
      * size of the media file in bytes
      */
     size: number;
+    /**
+     * duration of the media in seconds (``null``, if the media file is not an audio or video)
+     */
+    duration?: number | null;
+    /**
+     * ``true`` if requested video compression is not complete
+     */
+    uncompressed?: boolean | null;
+    /**
+     * ID of the compressed media file, if compression is complete
+     */
+    compressedMediaId?: string | null;
     /**
      * title of the media file, may be used as an alternative to the file name
      */
@@ -1816,8 +1835,8 @@ export interface PublicMediaFileInfo {
      */
     path: string;
     /**
-     * location of the media file, relative to the ``/media``; points to a static image served directly from a
-     * filesystem or CDN
+     * location of the media file, relative to the ``/media`` or an absolute URL; points to the media served directly
+     * from a filesystem or CDN
      */
     directPath?: string | null;
     /**
@@ -2216,6 +2235,10 @@ export interface RemoteMedia {
      */
     size: number;
     /**
+     * duration of the media in seconds (``null``, if the media file is not an audio or video)
+     */
+    duration?: number | null;
+    /**
      * title of the media file, may be used as an alternative to the file name
      */
     title?: string | null;
@@ -2268,9 +2291,17 @@ export interface RemoteMediaInfo {
      */
     size?: number | null;
     /**
+     * duration of the media in seconds (``null``, if the media file is not an audio or video)
+     */
+    duration?: number | null;
+    /**
      * title of the media file, may be used as an alternative to the file name
      */
     title?: string | null;
+    /**
+     * the text contained in the image, if any
+     */
+    textContent?: string | null;
     /**
      * ``true`` if the media cannot be displayed as an image or video and should be displayed as an attachment instead,
      * ``false`` (default) otherwise
@@ -2475,6 +2506,10 @@ export interface SearchCommentMediaTextUpdate {
      */
     mediaId: string;
     /**
+     * name of the node where the media is located
+     */
+    mediaNodeName?: string | null;
+    /**
      * title of the media file, may be used as an alternative to the file name
      */
     title?: string | null;
@@ -2678,6 +2713,10 @@ export interface SearchPostingMediaTextUpdate {
      * ID of the media
      */
     mediaId: string;
+    /**
+     * name of the node where the media is located
+     */
+    mediaNodeName?: string | null;
     /**
      * title of the media file, may be used as an alternative to the file name
      */
@@ -3824,6 +3863,13 @@ export interface VisitDetails {
     referrer?: string | null;
 }
 
+export interface VisitedNodeAttributes {
+    /**
+     * name of the visited node
+     */
+    nodeName: string;
+}
+
 export interface WhoAmI {
     nodeName?: string | null;
     /**
@@ -4549,6 +4595,10 @@ export type PostingRevisionInfo = PostingRevisionInfoBase<Body>;
 
 export interface PostingSourceText {
     /**
+     * full name of the posting's owner
+     */
+    ownerFullName?: string | null;
+    /**
      * avatar of the posting's owner
      */
     ownerAvatar?: AvatarDescription | null;
@@ -4577,6 +4627,10 @@ export interface PostingSourceText {
      * types of reactions that the posting's comments should rejects
      */
     commentRejectedReactions?: RejectedReactions | null;
+    /**
+     * list of publications in feeds that must be made after creating the posting (for new postings only)
+     */
+    publications?: StoryAttributes[] | null;
     /**
      * the operations and the corresponding principals
      */
@@ -4761,6 +4815,10 @@ export interface SearchEntryInfoBase<B> {
      * ID of the media attached to the entry that was chosen for the preview
      */
     mediaPreviewId?: string | null;
+    /**
+     * MIME type of the media attached to the entry that was chosen for the preview
+     */
+    mediaPreviewMimeType?: string | null;
     /**
      * information about the comment this comment is replying to
      */
@@ -5202,6 +5260,10 @@ export type EncodedCommentsSliceInfo = CommentsSliceInfoBase<string>;
 export type CommentsSliceInfo = CommentsSliceInfoBase<Body>;
 
 export interface CommentSourceText {
+    /**
+     * full name of the comment's owner
+     */
+    ownerFullName?: string | null;
     /**
      * avatar of the comment's owner
      */

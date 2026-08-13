@@ -1312,8 +1312,9 @@ export class MoeraNode extends Caller {
      *
      * @param {string | null} upload - ID of the media upload to be used instead of the request body
      * @param {string | null} url - URL of the media to be used instead of the request body
-     * @param {boolean | null} downsize - `true` to scale the uploaded image down to the size recommended by the node,
-     * if possible; the default is `false`
+     * @param {boolean | null} downsize - `true` to scale the uploaded image down to the size recommended by the node
+     * or asynchronously compress an uploaded video to the recommended playback format and size, if possible; the
+     * default is `false`
      * @param {Buffer | null} body - optional
      * @param {string | null} contentType - optional content-type of ``body``
      * @return {Promise<API.PrivateMediaFileInfo>}

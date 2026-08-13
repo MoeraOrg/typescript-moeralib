@@ -1,6 +1,7 @@
 {
   "name": "moeralib",
-  "version": "0.18.7",
+  "version": "0.19.0",
+  "packageManager": "npm@10.8.2",
   "description": "Library to interact with Moera decentralized social network",
   "repository": {
     "type": "git",
