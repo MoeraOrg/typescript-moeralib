@@ -1,9 +1,13 @@
 import cloneDeep from 'lodash.clonedeep';
+import {Agent, Dispatcher} from "undici";
 
 import { Body, BodyFormat, Result, SourceFormat } from "./types";
 import { validateSchema } from "./validate";
 import { urlWithParameters } from "../util";
 import { formatSchemaErrors } from "../schema";
+
+const {version: packageVersion}: {version: string} = require("../../package.json");
+const insecureDispatcher = new Agent({connect: {rejectUnauthorized: false}});
 
 /**
  * Generic node error.
@@ -252,6 +256,8 @@ interface CallOptions {
     srcBodies?: boolean;
 }
 
+type FetchOptions = RequestInit & {dispatcher?: Dispatcher};
+
 export class Caller {
 
     /**
@@ -263,6 +269,8 @@ export class Caller {
     private _carte: string | null = null;
     private _carteSource: CarteSource | null = null;
     private _authMethod: NodeAuth = "none";
+    private _userAgent: string | null = null;
+    private _verifySsl: boolean = true;
 
     /**
      * Set node URL.
@@ -271,6 +279,15 @@ export class Caller {
      */
     nodeUrl(url: string): void {
         this.root = moeraRoot(url);
+    }
+
+    /**
+     * Enable or disable SSL certificate verification.
+     *
+     * @param {boolean} verifySsl
+     */
+    verifySsl(verifySsl: boolean): void {
+        this._verifySsl = verifySsl;
     }
 
     /**
@@ -347,6 +364,15 @@ export class Caller {
     }
 
     /**
+     * Set the User-Agent string.
+     *
+     * @param {string} agent
+     */
+    userAgent(agent: string): void {
+        this._userAgent = agent;
+    }
+
+    /**
      * Generic method for making node API requests.
      *
      * @param {string} name - request name (for error messages)
@@ -388,7 +414,8 @@ export class Caller {
 
         const headers: HeadersInit = {
             "Accept": "application/json",
-            "Content-Type": contentType ?? "application/json"
+            "Content-Type": contentType ?? "application/json",
+            "User-Agent": this._userAgent || `moeralib/${packageVersion}`
         }
         let bearer: string | null = null;
         if (auth) {
@@ -428,7 +455,11 @@ export class Caller {
         const signal = abortSignal(method, bodyEncoded);
         let response;
         try {
-             response = await fetch(url, {method, headers, body: bodyEncoded as BodyInit, signal});
+            const options: FetchOptions = {method, headers, body: bodyEncoded as BodyInit, signal};
+            if (!this._verifySsl) {
+                options.dispatcher = insecureDispatcher;
+            }
+            response = await fetch(url, options);
         } catch (e) {
             throw new MoeraNodeConnectionError(String(e));
         }

@@ -4500,10 +4500,10 @@ export interface PostingInfoBase<B> {
      */
     recommended?: boolean | null;
     /**
-     * URI of the external source the posting was received from; used by software that automatically forwards postings
-     * from other social networks (for admin only)
+     * URIs of the external sources the posting was received from; used by software that automatically forwards
+     * postings from other social networks (for admin only)
      */
-    externalSourceUri?: string | null;
+    externalSourceUri?: string[] | null;
 }
 
 export type EncodedPostingInfo = PostingInfoBase<string>;
@@ -4736,10 +4736,10 @@ export interface PostingText {
      */
     commentReactionOperations?: ReactionOperations | null;
     /**
-     * URI of the external source the posting was received from; used by software that automatically forwards postings
-     * from other social networks (for admin only)
+     * URIs of the external sources the posting was received from; used by software that automatically forwards
+     * postings from other social networks (for admin only)
      */
-    externalSourceUri?: string | null;
+    externalSourceUri?: string[] | null;
 }
 
 export interface ReactionCreated {
