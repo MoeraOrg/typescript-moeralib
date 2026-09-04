@@ -198,6 +198,28 @@ export function createMediaGrantFingerprint0(
     );
 }
 
+const NOTIFICATION_PACKET_FINGERPRINT2_SCHEMA: FingerprintSchema = [
+    ["version", "number"],
+    ["objectType", "string"],
+    ["id", "string"],
+    ["nodeName", "string"],
+    ["fullName", "string"],
+    ["nodeSourceUri", "string"],
+    ["createdAt", "number"],
+    ["type", "string"],
+    ["notification", "string"],
+];
+
+export function createNotificationPacketFingerprint2(
+    id: string | null, nodeName: string | null, fullName: string | null, nodeSourceUri: string | null,
+    createdAt: number | null, type: string | null, notification: string | null
+): Buffer {
+    return fingerprintBytes(
+        {"version": 2, "objectType": "NOTIFICATION_PACKET", id, nodeName, fullName, nodeSourceUri, createdAt, type,
+        notification}, NOTIFICATION_PACKET_FINGERPRINT2_SCHEMA
+    );
+}
+
 const NOTIFICATION_PACKET_FINGERPRINT1_SCHEMA: FingerprintSchema = [
     ["version", "number"],
     ["objectType", "string"],

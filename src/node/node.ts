@@ -1634,58 +1634,6 @@ export class MoeraNode extends Caller {
     }
 
     /**
-     * Register the plugin. If the plugin authenticates as root admin, the plugin is registered at the server level. If
-     * the plugin authenticates as node admin, the plugin is registered at the node level.
-     *
-     * @param {API.PluginDescription} plugin
-     * @return {Promise<API.PluginInfo>}
-     */
-    async registerPlugin(plugin: API.PluginDescription): Promise<API.PluginInfo> {
-        const location = "/plugins";
-        return await this.call("registerPlugin", location, {
-            method: "POST", body: plugin, schema: "PluginInfo"
-        }) as API.PluginInfo;
-    }
-
-    /**
-     * Get information about all plugins registered for the node and server.
-     *
-     * @return {Promise<API.PluginInfo[]>}
-     */
-    async getPlugins(): Promise<API.PluginInfo[]> {
-        const location = "/plugins";
-        return await this.call("getPlugins", location, {
-            method: "GET", schema: "PluginInfoArray"
-        }) as API.PluginInfo[];
-    }
-
-    /**
-     * Get information about the plugin.
-     *
-     * @param {string} pluginName - name of the plugin
-     * @return {Promise<API.PluginInfo>}
-     */
-    async getPlugin(pluginName: string): Promise<API.PluginInfo> {
-        const location = ut`/plugins/${pluginName}`;
-        return await this.call("getPlugin", location, {
-            method: "GET", schema: "PluginInfo"
-        }) as API.PluginInfo;
-    }
-
-    /**
-     * Unregister the plugin.
-     *
-     * @param {string} pluginName - name of the plugin
-     * @return {Promise<API.Result>}
-     */
-    async unregisterPlugin(pluginName: string): Promise<API.Result> {
-        const location = ut`/plugins/${pluginName}`;
-        return await this.call("unregisterPlugin", location, {
-            method: "DELETE", schema: "Result"
-        }) as API.Result;
-    }
-
-    /**
      * Create a new posting from the text given and publish it in the given feeds (if any). The heading and the preview
      * of the posting are created automatically, if needed. The posting owner must authenticate in some way. If the
      * posting is not signed, it will be kept for a limited period of time and then erased. If authenticated as admin,
@@ -1973,8 +1921,9 @@ export class MoeraNode extends Caller {
     }
 
     /**
-     * Update the profile. Fields that are not set in the request body are left intact. Fields that are set to an empty
-     * value are reset to their defaults.
+     * To update a profile attribute, include the field with its new value. For a partial update, include only the
+     * fields to be changed; omitted fields remain unchanged. To delete an attribute, include the field with an empty
+     * value, which resets it to its default.
      *
      * @param {API.ProfileAttributes} profile
      * @return {Promise<API.ProfileInfo>}

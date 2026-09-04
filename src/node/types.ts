@@ -26,9 +26,9 @@ export type PushRelayType = "fcm";
 
 export type Scope = "none" | "identify" | "other" | "view-content" | "add-post" | "update-post" | "add-comment"
     | "update-comment" | "react" | "delete-own-content" | "delete-others-content" | "view-people" | "block" | "friend"
-    | "remote-identify" | "drafts" | "view-feeds" | "update-feeds" | "name" | "plugins" | "view-profile"
-    | "update-profile" | "sheriff" | "view-settings" | "update-settings" | "subscribe" | "tokens" | "user-lists"
-    | "grant" | "upload-public-media" | "upload-private-media" | "lease-media" | "view-all" | "all";
+    | "remote-identify" | "drafts" | "view-feeds" | "update-feeds" | "name" | "view-profile" | "update-profile"
+    | "sheriff" | "view-settings" | "update-settings" | "subscribe" | "tokens" | "user-lists" | "grant"
+    | "upload-public-media" | "upload-private-media" | "lease-media" | "view-all" | "all";
 
 export const SCOPE_VALUES: Record<Scope, number> = {
     "none": 0x00000000,
@@ -50,7 +50,6 @@ export const SCOPE_VALUES: Record<Scope, number> = {
     "view-feeds": 0x00008000,
     "update-feeds": 0x00010000,
     "name": 0x00020000,
-    "plugins": 0x00040000,
     "view-profile": 0x00080000,
     "update-profile": 0x00100000,
     "sheriff": 0x00200000,
@@ -64,7 +63,7 @@ export const SCOPE_VALUES: Record<Scope, number> = {
     "upload-private-media": 0x20000000,
     "lease-media": 0x40000000,
     "view-all": 0x00088404,
-    "all": 0x7ffffffd,
+    "all": 0x7ffbfffd,
 };
 
 export type SearchContentUpdateType = "block" | "comment-add" | "comment-update" | "comment-update-heading"
@@ -885,6 +884,10 @@ export interface ContactFilter {
 export interface ContactInfo {
     nodeName: string;
     fullName?: string | null;
+    /**
+     * source URI of the node identity
+     */
+    nodeSourceUri?: string | null;
     gender?: string | null;
     title?: string | null;
     avatar?: AvatarImage | null;
@@ -932,8 +935,12 @@ export interface ContactInfo {
 }
 
 export interface Credentials {
-    login: string;
-    password: string;
+    login?: string | null;
+    password?: string | null;
+    /**
+     * if ``true``, disable login and password reset
+     */
+    loginDisabled?: boolean | null;
 }
 
 export interface CredentialsChange {
@@ -954,6 +961,10 @@ export interface CredentialsCreated {
      * ``true`` if the credentials are initialized already, ``false`` otherwise
      */
     created: boolean;
+    /**
+     * ``true`` if login and password reset are disabled
+     */
+    loginDisabled?: boolean | null;
 }
 
 export interface CredentialsResetToken {
@@ -1418,6 +1429,10 @@ export interface NotificationPacket {
      */
     fullName?: string | null;
     /**
+     * source URI of the node identity
+     */
+    nodeSourceUri?: string | null;
+    /**
      * gender of the sending node
      */
     gender?: string | null;
@@ -1528,54 +1543,6 @@ export interface PeopleGeneralInfo {
     operations?: PeopleOperations | null;
 }
 
-export interface PluginContext {
-    /**
-     * ``true``, if the client has authenticated as root admin, ``false`` otherwise
-     */
-    rootAdmin: boolean;
-    /**
-     * ``true``, if the client has authenticated as node admin, ``false`` otherwise
-     */
-    admin: boolean;
-    /**
-     * the list of permissions granted to the client, if it has authenticated as node admin; see
-     * ``TokenInfo.permissions`` for the list of possible values
-     */
-    authCategories: string[];
-    /**
-     * node name of the client
-     */
-    clientName: string;
-    /**
-     * IP address of the client
-     */
-    remoteAddress: string;
-    /**
-     * user agent (browser) used by the client
-     */
-    userAgent: string;
-    /**
-     * operating system used by the client
-     */
-    userAgentOs: string;
-    /**
-     * ID of the current node
-     */
-    nodeId: string;
-    /**
-     * node name of the current node
-     */
-    nodeName: string;
-    /**
-     * domain name of the current node
-     */
-    domainName: string;
-    /**
-     * full URL of the request
-     */
-    originUrl: string;
-}
-
 export interface PostingFeatures {
     /**
      * ``true`` if the client is allowed to create postings, ``false`` otherwise
@@ -1608,6 +1575,10 @@ export interface PostingSourceInfo {
      * full name of the remote node
      */
     fullName?: string | null;
+    /**
+     * source URI of the node identity
+     */
+    nodeSourceUri?: string | null;
     /**
      * avatar of the remote node
      */
@@ -1743,6 +1714,10 @@ export interface ProfileAttributes {
      */
     fullName?: string | null;
     /**
+     * source URI of the node identity
+     */
+    sourceUri?: string | null;
+    /**
      * node owner's gender
      */
     gender?: string | null;
@@ -1782,6 +1757,10 @@ export interface ProfileInfo {
      * node owner's full name
      */
     fullName?: string | null;
+    /**
+     * source URI of the node identity
+     */
+    sourceUri?: string | null;
     /**
      * node owner's gender
      */
@@ -1906,6 +1885,10 @@ export interface ReactionDescription {
      */
     ownerFullName?: string | null;
     /**
+     * source URI of the node identity
+     */
+    ownerSourceUri?: string | null;
+    /**
      * reaction owner's gender
      */
     ownerGender?: string | null;
@@ -1955,6 +1938,10 @@ export interface ReactionInfo {
      * reaction owner's full name
      */
     ownerFullName?: string | null;
+    /**
+     * source URI of the node identity
+     */
+    ownerSourceUri?: string | null;
     /**
      * reaction owner's gender
      */
@@ -2116,6 +2103,10 @@ export interface RecommendedPostingInfo {
      */
     ownerFullName?: string | null;
     /**
+     * source URI of the node identity
+     */
+    ownerSourceUri?: string | null;
+    /**
      * avatar of the posting's owner
      */
     ownerAvatar?: AvatarImage | null;
@@ -2172,6 +2163,10 @@ export interface RecommendedNodeInfo {
      * node owner's full name
      */
     fullName?: string | null;
+    /**
+     * source URI of the node identity
+     */
+    nodeSourceUri?: string | null;
     /**
      * node title
      */
@@ -2399,6 +2394,10 @@ export interface RepliedTo {
      * full name of the comment's owner
      */
     fullName?: string | null;
+    /**
+     * source URI of the node identity
+     */
+    sourceUri?: string | null;
     /**
      * gender of the comment's owner
      */
@@ -2638,6 +2637,10 @@ export interface SearchNodeInfo {
      */
     fullName?: string | null;
     /**
+     * source URI of the node identity
+     */
+    nodeSourceUri?: string | null;
+    /**
      * node title
      */
     title?: string | null;
@@ -2782,6 +2785,10 @@ export interface SearchRepliedTo {
      * full name of the comment's owner
      */
     fullName?: string | null;
+    /**
+     * source URI of the node identity
+     */
+    sourceUri?: string | null;
     /**
      * avatar of the comment's owner
      */
@@ -2939,6 +2946,10 @@ export interface SheriffComplaintGroupInfo {
      */
     remoteNodeFullName?: string | null;
     /**
+     * source URI of the node identity
+     */
+    remoteNodeSourceUri?: string | null;
+    /**
      * name of the feed the complaints are related to
      */
     remoteFeedName: string;
@@ -2958,6 +2969,10 @@ export interface SheriffComplaintGroupInfo {
      * posting owner's full name
      */
     remotePostingOwnerFullName?: string | null;
+    /**
+     * source URI of the node identity
+     */
+    remotePostingOwnerSourceUri?: string | null;
     /**
      * posting owner's gender
      */
@@ -2982,6 +2997,10 @@ export interface SheriffComplaintGroupInfo {
      * comment owner's full name
      */
     remoteCommentOwnerFullName?: string | null;
+    /**
+     * source URI of the node identity
+     */
+    remoteCommentOwnerSourceUri?: string | null;
     /**
      * comment owner's gender
      */
@@ -3058,6 +3077,10 @@ export interface SheriffComplaintInfo {
      */
     ownerFullName?: string | null;
     /**
+     * source URI of the node identity
+     */
+    ownerSourceUri?: string | null;
+    /**
      * complaint owner's gender
      */
     ownerGender?: string | null;
@@ -3089,6 +3112,10 @@ export interface SheriffComplaintText {
      */
     ownerFullName?: string | null;
     /**
+     * source URI of the node identity
+     */
+    ownerSourceUri?: string | null;
+    /**
      * complaint owner's gender
      */
     ownerGender?: string | null;
@@ -3100,6 +3127,10 @@ export interface SheriffComplaintText {
      * full name of the node the complaint is related to
      */
     fullName?: string | null;
+    /**
+     * source URI of the node identity
+     */
+    nodeSourceUri?: string | null;
     /**
      * name of the feed the complaint is related to
      */
@@ -3116,6 +3147,10 @@ export interface SheriffComplaintText {
      * posting owner's full name
      */
     postingOwnerFullName?: string | null;
+    /**
+     * source URI of the node identity
+     */
+    postingOwnerSourceUri?: string | null;
     /**
      * posting owner's gender
      */
@@ -3136,6 +3171,10 @@ export interface SheriffComplaintText {
      * comment owner's full name
      */
     commentOwnerFullName?: string | null;
+    /**
+     * source URI of the node identity
+     */
+    commentOwnerSourceUri?: string | null;
     /**
      * comment owner's gender
      */
@@ -3260,6 +3299,10 @@ export interface SheriffOrderInfo {
      */
     nodeFullName?: string | null;
     /**
+     * source URI of the node identity
+     */
+    nodeSourceUri?: string | null;
+    /**
      * name of the feed the order is related to
      */
     feedName: string;
@@ -3279,6 +3322,10 @@ export interface SheriffOrderInfo {
      * posting owner's full name
      */
     postingOwnerFullName?: string | null;
+    /**
+     * source URI of the node identity
+     */
+    postingOwnerSourceUri?: string | null;
     /**
      * posting owner's gender
      */
@@ -3303,6 +3350,10 @@ export interface SheriffOrderInfo {
      * comment owner's full name
      */
     commentOwnerFullName?: string | null;
+    /**
+     * source URI of the node identity
+     */
+    commentOwnerSourceUri?: string | null;
     /**
      * comment owner's gender
      */
@@ -3431,6 +3482,10 @@ export interface StorySummaryEntry {
      */
     ownerFullName?: string | null;
     /**
+     * source URI of the node identity
+     */
+    ownerSourceUri?: string | null;
+    /**
      * entry owner's gender
      */
     ownerGender?: string | null;
@@ -3457,6 +3512,10 @@ export interface StorySummaryNode {
      * node owner's full name
      */
     ownerFullName?: string | null;
+    /**
+     * source URI of the node identity
+     */
+    ownerSourceUri?: string | null;
     /**
      * node owner's gender
      */
@@ -3487,6 +3546,10 @@ export interface StorySummaryReaction {
      * reaction owner's full name
      */
     ownerFullName?: string | null;
+    /**
+     * source URI of the node identity
+     */
+    ownerSourceUri?: string | null;
     /**
      * reaction owner's gender
      */
@@ -3717,10 +3780,6 @@ export interface TokenInfo {
      */
     permissions: Scope[];
     /**
-     * a plugin the token belongs to; if set, only this plugin may use the token
-     */
-    pluginName?: string | null;
-    /**
      * token creation timestamp
      */
     createdAt: number;
@@ -3881,6 +3940,10 @@ export interface WhoAmI {
      */
     fullName?: string | null;
     /**
+     * source URI of the node identity
+     */
+    sourceUri?: string | null;
+    /**
      * node owner's gender
      */
     gender?: string | null;
@@ -3918,6 +3981,10 @@ export interface ActivityReactionInfo {
      * full name of the remote node
      */
     remoteFullName?: string | null;
+    /**
+     * source URI of the node identity
+     */
+    remoteSourceUri?: string | null;
     /**
      * avatar of the remote node
      */
@@ -4101,10 +4168,6 @@ export interface Features {
      * features of a posting
      */
     posting: PostingFeatures;
-    /**
-     * list of names of plugins enabled for the node
-     */
-    plugins?: string[] | null;
     /**
      * width of the feed in pixels
      */
@@ -4301,6 +4364,10 @@ export interface PostingInfoBase<B> {
      */
     receiverFullName?: string | null;
     /**
+     * source URI of the node identity
+     */
+    receiverSourceUri?: string | null;
+    /**
      * gender of the node where the posting was published (for cached copies of remote postings only)
      */
     receiverGender?: string | null;
@@ -4324,6 +4391,10 @@ export interface PostingInfoBase<B> {
      * full name of the posting's owner
      */
     ownerFullName?: string | null;
+    /**
+     * source URI of the node identity
+     */
+    ownerSourceUri?: string | null;
     /**
      * gender of the posting's owner
      */
@@ -4599,6 +4670,10 @@ export interface PostingSourceText {
      */
     ownerFullName?: string | null;
     /**
+     * source URI of the node identity
+     */
+    ownerSourceUri?: string | null;
+    /**
      * avatar of the posting's owner
      */
     ownerAvatar?: AvatarDescription | null;
@@ -4655,9 +4730,15 @@ export interface PostingText {
      */
     ownerName?: string | null;
     /**
-     * full name of the posting's owner
+     * full name of the posting's owner; if omitted, the node profile value is used when creating a posting and the
+     * current posting value is preserved when updating it; an explicitly empty string is stored as empty
      */
     ownerFullName?: string | null;
+    /**
+     * source URI of the posting owner's identity; if omitted, the node profile value is used when creating a posting
+     * and the current posting value is preserved when updating it; an explicitly empty string is stored as empty
+     */
+    ownerSourceUri?: string | null;
     /**
      * gender of the posting's owner
      */
@@ -4774,6 +4855,10 @@ export interface SearchEntryInfoBase<B> {
      * full name of the entry's owner
      */
     ownerFullName?: string | null;
+    /**
+     * source URI of the node identity
+     */
+    ownerSourceUri?: string | null;
     /**
      * avatar of the entry's owner
      */
@@ -4996,6 +5081,10 @@ export interface CommentInfoBase<B> {
      * full name of the comment's owner
      */
     ownerFullName?: string | null;
+    /**
+     * source URI of the node identity
+     */
+    ownerSourceUri?: string | null;
     /**
      * gender of the comment's owner
      */
@@ -5265,6 +5354,10 @@ export interface CommentSourceText {
      */
     ownerFullName?: string | null;
     /**
+     * source URI of the node identity
+     */
+    ownerSourceUri?: string | null;
+    /**
      * avatar of the comment's owner
      */
     ownerAvatar?: AvatarDescription | null;
@@ -5322,6 +5415,10 @@ export interface CommentText {
      * full name of the comment's owner
      */
     ownerFullName?: string | null;
+    /**
+     * source URI of the node identity
+     */
+    ownerSourceUri?: string | null;
     /**
      * gender of the comment's owner
      */
@@ -5439,6 +5536,10 @@ export interface DraftInfoBase<B> {
      */
     ownerFullName?: string | null;
     /**
+     * source URI of the node identity
+     */
+    ownerSourceUri?: string | null;
+    /**
      * avatar of the posting's/comment's owner
      */
     ownerAvatar?: AvatarImage | null;
@@ -5526,6 +5627,10 @@ export interface DraftText {
      * full name of the posting's/comment's owner
      */
     ownerFullName?: string | null;
+    /**
+     * source URI of the node identity
+     */
+    ownerSourceUri?: string | null;
     /**
      * avatar of the posting's/comment's owner
      */
@@ -5682,6 +5787,10 @@ export interface StoryInfoBase<B> {
      */
     summaryFullName?: string | null;
     /**
+     * source URI of the node identity
+     */
+    summarySourceUri?: string | null;
+    /**
      * avatar of the summary of the story
      */
     summaryAvatar?: AvatarImage | null;
@@ -5717,6 +5826,10 @@ export interface StoryInfoBase<B> {
      * full name of the node this story is about
      */
     remoteFullName?: string | null;
+    /**
+     * source URI of the node identity
+     */
+    remoteSourceUri?: string | null;
     /**
      * ID of the posting at remote node this story is about
      */
@@ -5777,73 +5890,6 @@ export interface FeedSliceInfoBase<B> {
 
 export type EncodedFeedSliceInfo = FeedSliceInfoBase<string>;
 export type FeedSliceInfo = FeedSliceInfoBase<Body>;
-
-export interface PluginDescription {
-    /**
-     * a unique plugin name; can contain only small latin letters, digits or hyphen
-     */
-    name: string;
-    /**
-     * user-readable title of the plugin
-     */
-    title?: string | null;
-    /**
-     * user-readable description of the purpose of the plugin
-     */
-    description?: string | null;
-    /**
-     * URL of the plugin; used by the node to call the plugin API
-     */
-    location?: string | null;
-    /**
-     * list of types of internal events the plugin wants to receive; Read more about internal events.
-     */
-    acceptedEvents?: string[] | null;
-    /**
-     * plugin settings to be added to the list of node settings, the settings appear in the list with a prefix
-     * ``plugin.&lt;plugin name>.``
-     */
-    options?: SettingDescriptor[] | null;
-}
-
-export interface PluginInfo {
-    /**
-     * ID of the node this plugin is connected to
-     */
-    nodeId: string;
-    /**
-     * ``true`` if the plugin is enabled for a particular node only, ``false``, if it is enabled for the whole server
-     */
-    local: boolean;
-    /**
-     * a unique plugin name
-     */
-    name: string;
-    /**
-     * user-readable title of the plugin
-     */
-    title?: string | null;
-    /**
-     * user-readable description of the purpose of the plugin
-     */
-    description?: string | null;
-    /**
-     * URL of the plugin; used by the node to call the plugin API
-     */
-    location?: string | null;
-    /**
-     * list of types of internal events the plugin wants to receive; Read more about internal events.
-     */
-    acceptedEvents?: string[] | null;
-    /**
-     * plugin settings to be added to the list of node settings
-     */
-    settings?: SettingMetaInfo[] | null;
-    /**
-     * ID of the token used to authenticate the plugin
-     */
-    tokenId?: string | null;
-}
 
 export interface PushContentBase<B> {
     /**
