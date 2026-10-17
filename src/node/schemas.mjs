@@ -19,6 +19,10 @@ export const NODE_API_SCHEMAS = {
                     type: "string",
                     nullable: true
                 },
+                "viewExternalSource": {
+                    type: "string",
+                    nullable: true
+                },
                 "viewReactions": {
                     type: "string",
                     nullable: true
@@ -196,7 +200,19 @@ export const NODE_API_SCHEMAS = {
                     type: "string",
                     nullable: true
                 },
+                "viewExternalSource": {
+                    type: "string",
+                    nullable: true
+                },
                 "viewComments": {
+                    type: "string",
+                    nullable: true
+                },
+                "viewSharings": {
+                    type: "string",
+                    nullable: true
+                },
+                "viewTotalSharings": {
                     type: "string",
                     nullable: true
                 },
@@ -2606,6 +2622,111 @@ export const NODE_API_SCHEMAS = {
             additionalProperties: false
         },
 
+        SharingInfo: {
+            type: "object",
+            properties: {
+                "id": {
+                    type: "string"
+                },
+                "sharingType": {
+                    type: "string"
+                },
+                "remoteNodeName": {
+                    type: "string"
+                },
+                "remoteFullName": {
+                    type: "string",
+                    nullable: true
+                },
+                "remoteSourceUri": {
+                    type: "string",
+                    nullable: true
+                },
+                "remoteGender": {
+                    type: "string",
+                    nullable: true
+                },
+                "remoteAvatar": {
+                    anyOf: [
+                        {
+                            $ref: "node#/definitions/AvatarImage",
+                            type: "object",
+                            nullable: true
+                        },
+                        {
+                            type: "null"
+                        }
+                    ]
+                },
+                "remoteFeedName": {
+                    type: "string",
+                    nullable: true
+                },
+                "remoteStoryId": {
+                    type: "string",
+                    nullable: true
+                },
+                "remoteStoryMoment": {
+                    type: "integer",
+                    nullable: true
+                },
+                "remotePostingId": {
+                    type: "string",
+                    nullable: true
+                },
+                "postingId": {
+                    type: "string"
+                },
+                "postingRevisionId": {
+                    type: "string",
+                    nullable: true
+                },
+                "moment": {
+                    type: "integer"
+                },
+                "createdAt": {
+                    type: "integer"
+                },
+            },
+            required: [
+                "id",
+                "sharingType",
+                "remoteNodeName",
+                "postingId",
+                "moment",
+                "createdAt",
+            ],
+            additionalProperties: false
+        },
+
+        SharingsSliceInfo: {
+            type: "object",
+            properties: {
+                "before": {
+                    type: "integer"
+                },
+                "after": {
+                    type: "integer"
+                },
+                "total": {
+                    type: "integer"
+                },
+                "sharings": {
+                    type: "array",
+                    items: {
+                        $ref: "node#/definitions/SharingInfo"
+                    }
+                },
+            },
+            required: [
+                "before",
+                "after",
+                "total",
+                "sharings",
+            ],
+            additionalProperties: false
+        },
+
         SheriffComplaintGroupInfo: {
             type: "object",
             properties: {
@@ -4187,6 +4308,10 @@ export const NODE_API_SCHEMAS = {
                     type: "integer",
                     nullable: true
                 },
+                "earliestPublishedAt": {
+                    type: "integer",
+                    nullable: true
+                },
                 "receiverCreatedAt": {
                     type: "integer",
                     nullable: true
@@ -4196,6 +4321,10 @@ export const NODE_API_SCHEMAS = {
                     nullable: true
                 },
                 "receiverDeletedAt": {
+                    type: "integer",
+                    nullable: true
+                },
+                "receiverPublishedAt": {
                     type: "integer",
                     nullable: true
                 },
@@ -4380,6 +4509,10 @@ export const NODE_API_SCHEMAS = {
                     nullable: true
                 },
                 "totalComments": {
+                    type: "integer",
+                    nullable: true
+                },
+                "totalSharings": {
                     type: "integer",
                     nullable: true
                 },
@@ -4665,6 +4798,10 @@ export const NODE_API_SCHEMAS = {
                 "createdAt": {
                     type: "integer"
                 },
+                "earliestPublishedAt": {
+                    type: "integer",
+                    nullable: true
+                },
                 "operations": {
                     anyOf: [
                         {
@@ -4880,6 +5017,17 @@ export const NODE_API_SCHEMAS = {
                     nullable: true
                 },
                 "totalReactions": {
+                    type: "integer",
+                    nullable: true
+                },
+                "sharings": {
+                    type: "array",
+                    items: {
+                        $ref: "node#/definitions/StorySummaryNode"
+                    },
+                    nullable: true
+                },
+                "totalSharings": {
                     type: "integer",
                     nullable: true
                 },
@@ -5205,6 +5353,13 @@ export const NODE_API_SCHEMAS = {
                             type: "null"
                         }
                     ]
+                },
+                "externalSourceUri": {
+                    type: "array",
+                    items: {
+                        type: "string"
+                    },
+                    nullable: true
                 },
             },
             required: [
@@ -5706,6 +5861,10 @@ export const NODE_API_SCHEMAS = {
                     type: "string",
                     nullable: true
                 },
+                "remoteStoryMoment": {
+                    type: "integer",
+                    nullable: true
+                },
                 "remotePostingId": {
                     type: "string",
                     nullable: true
@@ -5730,6 +5889,13 @@ export const NODE_API_SCHEMAS = {
                         }
                     ]
                 },
+                "externalSourceUri": {
+                    type: "array",
+                    items: {
+                        type: "string"
+                    },
+                    nullable: true
+                },
             },
             required: [
                 "id",
@@ -5740,6 +5906,13 @@ export const NODE_API_SCHEMAS = {
                 "moment",
             ],
             additionalProperties: false
+        },
+
+        StoryInfoArray: {
+            type: "array",
+            items: {
+                $ref: "node#/definitions/StoryInfo"
+            }
         },
 
         CommentCreated: {

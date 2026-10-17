@@ -87,6 +87,8 @@ export type SheriffOrderCategory = "visibility";
 export type SheriffOrderReason = "unlawful" | "defamatory" | "threat" | "spam" | "scam" | "malware" | "copyright"
     | "impersonating" | "privacy" | "other";
 
+export type SharingType = "republish";
+
 export type SourceFormat = "plain-text" | "html" | "markdown" | "html/visual" | "application";
 
 export type StoryType = "asked-to-friend" | "asked-to-subscribe" | "blocked-user" | "blocked-user-in-posting"
@@ -96,7 +98,7 @@ export type StoryType = "asked-to-friend" | "asked-to-subscribe" | "blocked-user
     | "comment-update-task-failed" | "defrosting" | "friend-added" | "friend-deleted" | "friend-group-deleted"
     | "mention-comment" | "mention-posting" | "posting-added" | "posting-media-reaction-added-negative"
     | "posting-media-reaction-added-positive" | "posting-media-reaction-failed" | "posting-post-task-failed"
-    | "posting-reaction-task-failed" | "posting-subscribe-task-failed" | "posting-update-task-failed"
+    | "posting-reaction-task-failed" | "posting-shared" | "posting-subscribe-task-failed" | "posting-update-task-failed"
     | "posting-updated" | "premoderated-comment-accepted" | "premoderated-comment-rejected" | "reaction-added-negative"
     | "reaction-added-positive" | "reminder-avatar" | "reminder-email" | "reminder-full-name" | "reminder-sheriff-allow"
     | "remote-comment-added" | "reply-comment" | "search-report" | "sheriff-complaint-added"
@@ -122,6 +124,10 @@ export interface CommentOperations {
      * delete the comment
      */
     delete?: PrincipalValue | null;
+    /**
+     * view the comment's external source URIs
+     */
+    viewExternalSource?: PrincipalValue | null;
     /**
      * view the comment's reactions
      */
@@ -272,9 +278,21 @@ export interface PostingOperations {
      */
     delete?: PrincipalValue | null;
     /**
+     * view the posting's external source URIs
+     */
+    viewExternalSource?: PrincipalValue | null;
+    /**
      * view the posting's comments
      */
     viewComments?: PrincipalValue | null;
+    /**
+     * view the posting's sharings
+     */
+    viewSharings?: PrincipalValue | null;
+    /**
+     * view the number of the posting's sharings
+     */
+    viewTotalSharings?: PrincipalValue | null;
     /**
      * add a comment to the posting
      */
@@ -2916,6 +2934,88 @@ export interface SettingValueChoice {
     value: string;
 }
 
+export interface SharingInfo {
+    /**
+     * ID of the sharing
+     */
+    id: string;
+    /**
+     * type of sharing
+     */
+    sharingType: SharingType;
+    /**
+     * name of the node that shared the posting
+     */
+    remoteNodeName: string;
+    /**
+     * full name of the sharing node
+     */
+    remoteFullName?: string | null;
+    /**
+     * source URI of the sharing node identity
+     */
+    remoteSourceUri?: string | null;
+    /**
+     * gender of the sharing node owner
+     */
+    remoteGender?: string | null;
+    /**
+     * avatar of the sharing node
+     */
+    remoteAvatar?: AvatarImage | null;
+    /**
+     * name of the feed containing the shared posting
+     */
+    remoteFeedName?: string | null;
+    /**
+     * ID of the story containing the shared posting
+     */
+    remoteStoryId?: string | null;
+    /**
+     * moment of the story containing the shared posting
+     */
+    remoteStoryMoment?: number | null;
+    /**
+     * ID of the shared posting on the remote node
+     */
+    remotePostingId?: string | null;
+    /**
+     * ID of the original posting
+     */
+    postingId: string;
+    /**
+     * ID of the shared revision of the original posting
+     */
+    postingRevisionId?: string | null;
+    /**
+     * moment of the sharing, used for pagination
+     */
+    moment: number;
+    /**
+     * creation timestamp of the sharing record
+     */
+    createdAt: number;
+}
+
+export interface SharingsSliceInfo {
+    /**
+     * the slice contains all sharings before this moment, inclusive. May be the far future.
+     */
+    before: number;
+    /**
+     * the slice contains all sharings after this moment, exclusive. May be the far past.
+     */
+    after: number;
+    /**
+     * total number of sharings in the whole list; zero when viewing the counter is not permitted
+     */
+    total: number;
+    /**
+     * the sharings
+     */
+    sharings: SharingInfo[];
+}
+
 export interface SheriffComplaintDecisionText {
     /**
      * ``true``, if the complaints in the group are to be rejected, ``false`` otherwise
@@ -3448,6 +3548,11 @@ export interface StoryAttributes {
      * value of the ``satisfied`` flag (``null``, if the flag is not changed)
      */
     satisfied?: boolean | null;
+    /**
+     * URIs of the external sources the story was received from; used by software that automatically forwards stories
+     * from other social networks
+     */
+    externalSourceUri?: string[] | null;
 }
 
 export interface StorySummaryBlocked {
@@ -4457,6 +4562,10 @@ export interface PostingInfoBase<B> {
      */
     deletedAt?: number | null;
     /**
+     * earliest publication timestamp of the posting in the timeline feed
+     */
+    earliestPublishedAt?: number | null;
+    /**
      * original posting creation timestamp (for cached copies of remote postings only)
      */
     receiverCreatedAt?: number | null;
@@ -4468,6 +4577,10 @@ export interface PostingInfoBase<B> {
      * original posting deletion timestamp (for cached copies of remote postings only)
      */
     receiverDeletedAt?: number | null;
+    /**
+     * earliest timeline publication timestamp of the original posting (for cached copies of remote postings only)
+     */
+    receiverPublishedAt?: number | null;
     /**
      * creation timestamp of the current revision of the posting
      */
@@ -4562,6 +4675,10 @@ export interface PostingInfoBase<B> {
      */
     totalComments?: number | null;
     /**
+     * total number of sharings of the posting; zero if absent
+     */
+    totalSharings?: number | null;
+    /**
      * number of posting views (for admin only)
      */
     viewCount?: number | null;
@@ -4572,7 +4689,7 @@ export interface PostingInfoBase<B> {
     recommended?: boolean | null;
     /**
      * URIs of the external sources the posting was received from; used by software that automatically forwards
-     * postings from other social networks (for admin only)
+     * postings from other social networks
      */
     externalSourceUri?: string[] | null;
 }
@@ -4663,6 +4780,17 @@ export interface PostingRevisionInfoBase<B> {
 
 export type EncodedPostingRevisionInfo = PostingRevisionInfoBase<string>;
 export type PostingRevisionInfo = PostingRevisionInfoBase<Body>;
+
+export interface PostingRepublishAttributes {
+    /**
+     * new visibility of the posting, if it needs to be changed
+     */
+    postingView?: PrincipalValue | null;
+    /**
+     * list of new publications in feeds
+     */
+    publications: StoryAttributes[];
+}
 
 export interface PostingSourceText {
     /**
@@ -4818,7 +4946,7 @@ export interface PostingText {
     commentReactionOperations?: ReactionOperations | null;
     /**
      * URIs of the external sources the posting was received from; used by software that automatically forwards
-     * postings from other social networks (for admin only)
+     * postings from other social networks
      */
     externalSourceUri?: string[] | null;
 }
@@ -4832,6 +4960,21 @@ export interface ReactionCreated {
      * summary of reactions after the creation
      */
     totals: ReactionTotalsInfo;
+}
+
+export interface RemotePostingRepublishAttributes {
+    /**
+     * name of the feed on the remote node the posting is being republished from
+     */
+    remoteFeedName: string;
+    /**
+     * visibility of the new posting, overriding the default
+     */
+    postingView?: PrincipalValue | null;
+    /**
+     * list of publications in feeds to be made after downloading the posting
+     */
+    publications: StoryAttributes[];
 }
 
 export interface SearchEntryInfoBase<B> {
@@ -4912,6 +5055,10 @@ export interface SearchEntryInfoBase<B> {
      * entry creation timestamp - the real time when the entry was created
      */
     createdAt: number;
+    /**
+     * earliest timeline publication timestamp of the posting at its source node (postings only)
+     */
+    earliestPublishedAt?: number | null;
     /**
      * the supported operations and the corresponding principals
      */
@@ -5041,6 +5188,14 @@ export interface StorySummaryData {
      * total number of reactions
      */
     totalReactions?: number | null;
+    /**
+     * nodes that shared the posting, newest first
+     */
+    sharings?: StorySummaryNode[] | null;
+    /**
+     * total number of sharings in the instant group
+     */
+    totalSharings?: number | null;
     /**
      * name of a feed
      */
@@ -5236,6 +5391,11 @@ export interface CommentInfoBase<B> {
      * summary of reactions to the comment
      */
     reactions?: ReactionTotalsInfo | null;
+    /**
+     * URIs of the external sources the comment was received from; used by software that automatically forwards
+     * comments from other social networks
+     */
+    externalSourceUri?: string[] | null;
 }
 
 export type EncodedCommentInfo = CommentInfoBase<string>;
@@ -5495,6 +5655,11 @@ export interface CommentText {
      * senior may set this
      */
     seniorOperations?: CommentOperations | null;
+    /**
+     * URIs of the external sources the comment was received from; used by software that automatically forwards
+     * comments from other social networks
+     */
+    externalSourceUri?: string[] | null;
 }
 
 export interface DraftInfoBase<B> {
@@ -5831,6 +5996,11 @@ export interface StoryInfoBase<B> {
      */
     remoteSourceUri?: string | null;
     /**
+     * moment of the story containing the shared posting on the remote node; set only for ``posting-shared`` stories
+     * associated with a sharing
+     */
+    remoteStoryMoment?: number | null;
+    /**
      * ID of the posting at remote node this story is about
      */
     remotePostingId?: string | null;
@@ -5846,6 +6016,11 @@ export interface StoryInfoBase<B> {
      * the supported operations and the corresponding principals
      */
     operations?: StoryOperations | null;
+    /**
+     * URIs of the external sources the story was received from; used by software that automatically forwards stories
+     * from other social networks; visible only to administrators with ``view-content`` scope
+     */
+    externalSourceUri?: string[] | null;
 }
 
 export type EncodedStoryInfo = StoryInfoBase<string>;

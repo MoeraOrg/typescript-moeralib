@@ -1664,7 +1664,9 @@ export class MoeraNode extends Caller {
     }
 
     /**
-     * Update the posting, creating a new revision of it. The text is processed just like in the ``POST`` request.
+     * Update the posting, creating a new revision of it. The text is processed just like in the ``POST`` request. If
+     * the posting is not original (a cached copy of a remote posting), only its permissions can be changed; all other
+     * fields are ignored and no new revision is created.
      *
      * @param {string} id - ID of the posting
      * @param {API.PostingText} posting
@@ -1704,6 +1706,20 @@ export class MoeraNode extends Caller {
         const location = ut`/postings/${id}`;
         return await this.call("deletePosting", location, {
             method: "DELETE", schema: "Result"
+        }) as API.Result;
+    }
+
+    /**
+     * Update the posting visibility if requested and publish it in the specified feeds.
+     *
+     * @param {string} id - ID of the posting
+     * @param {API.PostingRepublishAttributes} attributes
+     * @return {Promise<API.Result>}
+     */
+    async republishPosting(id: string, attributes: API.PostingRepublishAttributes): Promise<API.Result> {
+        const location = ut`/postings/${id}/republish`;
+        return await this.call("republishPosting", location, {
+            method: "POST", body: attributes, schema: "Result"
         }) as API.Result;
     }
 
@@ -1903,6 +1919,27 @@ export class MoeraNode extends Caller {
         return await this.call("searchPostingReactionTotals", location, {
             method: "POST", body: filter, schema: "ReactionTotalsInfoArray"
         }) as API.ReactionTotalsInfo[];
+    }
+
+    /**
+     * Get a slice of the sharings of the posting, delimited by the ``before`` moment and the given ``limit``. If
+     * ``before`` is not provided, the latest sharings are returned. The node may decide to return fewer sharings than
+     * the given ``limit``. The sharings are always sorted by moment, descending. The list is empty when viewing
+     * sharings is not permitted. The total is zero when viewing the sharing counter is not permitted.
+     *
+     * @param {string} postingId - ID of the posting
+     * @param {number | null} before - filter sharings created at or before this moment
+     * @param {number | null} limit - maximum number of sharings returned
+     * @return {Promise<API.SharingsSliceInfo>}
+     */
+    async getPostingSharings(
+        postingId: string, before: number | null = null, limit: number | null = null
+    ): Promise<API.SharingsSliceInfo> {
+        const location = ut`/postings/${postingId}/sharings`;
+        const params = {before, limit};
+        return await this.call("getPostingSharings", location, {
+            method: "GET", params, schema: "SharingsSliceInfo"
+        }) as API.SharingsSliceInfo;
     }
 
     /**
@@ -2339,6 +2376,23 @@ export class MoeraNode extends Caller {
     }
 
     /**
+     * Download the posting from the remote node and publish it in the specified feeds.
+     *
+     * @param {string} remoteNodeName - name of the remote node
+     * @param {string} id - ID of the posting on the remote node
+     * @param {API.RemotePostingRepublishAttributes} attributes
+     * @return {Promise<API.Result>}
+     */
+    async republishRemotePosting(
+        remoteNodeName: string, id: string, attributes: API.RemotePostingRepublishAttributes
+    ): Promise<API.Result> {
+        const location = ut`/nodes/${remoteNodeName}/postings/${id}/republish`;
+        return await this.call("republishRemotePosting", location, {
+            method: "POST", body: attributes, schema: "Result"
+        }) as API.Result;
+    }
+
+    /**
      * Verify the signature of the given posting.
      *
      * @param {string} remoteNodeName - name of the remote node
@@ -2692,6 +2746,20 @@ export class MoeraNode extends Caller {
         return await this.call("createSheriffOrder", location, {
             method: "POST", body: sheriffOrder, schema: "Result"
         }) as API.Result;
+    }
+
+    /**
+     * Get all stories coming from the given external source.
+     *
+     * @param {string} external - URI of the external source of the story
+     * @return {Promise<API.StoryInfo[]>}
+     */
+    async getStoriesByExternalSource(external: string): Promise<API.StoryInfo[]> {
+        const location = ut`/stories`;
+        const params = {external};
+        return await this.call("getStoriesByExternalSource", location, {
+            method: "GET", params, schema: "StoryInfoArray", bodies: true
+        }) as API.StoryInfo[];
     }
 
     /**
